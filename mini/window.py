@@ -45,11 +45,11 @@ class Pass(QtGui.QWidget):
 		with open('pass.py') as f:
 			salt = f.read()
 		nick = str(self.ui.lineEditUser.text()) + " : " + str(self.ui.lineEditURL.text())
-		firstXor = process(salt, nick)
+		firstXor = xor(salt, nick)
 		self.ui.lineEditURL.clear()
 		self.ui.lineEditUser.clear()
 		firstSha = hashlib.sha512(firstXor).hexdigest()
-		password = hashlib.sha512(process(firstSha, str(self.ui.lineEditPass.text()))).hexdigest()[:32]
+		password = hashlib.sha512(xor(firstSha, str(self.ui.lineEditPass.text()))).hexdigest()[:32]
 		self.ui.lineEditPass.clear()
 		self.ui.lineEditGive.setText(password)
 
