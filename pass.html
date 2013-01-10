@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="utf-8">
+  <title>Pass</title>
+  <style>
+  html, body {
+   height: 100%;
+   margin:0 auto;
+   padding: 0 auto;
+   text-align: left;
+   }
+   #wrapper {
+    height: 100%;
+    width: 1000px;
+    margin: 0 auto;
+    padding: 0 auto;
+   }
+   big {
+    font-family: "Times New Roman", Times, serif; 
+    font-size: 200%;
+    color: #FF4500 ;
+    }
+   small{
+    font-size: 90%;
+   }
+   p {
+    font-family: Arial, Helvetica, sans-serif;
+   }
+  h1 {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+   }
+  h3 {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: center;
+   }
+  a { 
+    text-decoration: none;
+    color: #9370DB;
+   } 
+
+/*autor: Kirill Kulicov http://koulikov.com/2012/11/hover-effects/ */
+  #containerRotate {
+    background: #333333;
+    padding: 20px;
+    margin: 50px 0;
+    min-height: 100%;
+   }
+
+   #rotate {
+    width: 1000px;	
+    margin: 0 auto;
+    text-align: center;
+   }
+
+   #rotate img {
+    margin: 20px;
+    border: 5px solid #9370DB;
+    -webkit-box-shadow: 4px 4px 4px #9370DB;
+    -moz-box-shadow: 4px 4px 4px #9370DB;
+    box-shadow: 4px 4px 4px #9370DB;
+    -webkit-transition: all 0.5s ease-out;
+    -moz-transition: all 0.5s ease-out;
+    -o-transition: all 0.5s ease-out;
+   }
+
+   #rotate img:hover {
+    -webkit-transform: rotate(-7deg);
+    -moz-transform: rotate(-7deg);
+    -o-transform: rotate(-7deg);
+   }
+
+  </style>
+ </head>
+ <body style="color:#47a315; background-color:#FFF68F">
+ <div id="wrapper">
+   <p align="center"><small>"simple - [adjective (simpler, simplest)] - easily understood or done; presenting no difficulty: a simple solution" <<a target="_blank" href="http://oxforddictionaries.com">oxforddictionaries.com</a></small></p>
+
+   <h1>Pa<big>s</big>s</h1>
+   <h3>«associate password so <big>simple</big>»</h3>
+   <br>
+
+   <p>Implementation of an algorithm generating and storing a passwords like this: "cf83e1357eefb8bdf1542850d66d8007". Written on pyQt.</p>
+   <p>Used <code>sha512(sha512("salt" XOR "nick : site") XOR "pass")[:32]</code> algorithm, created by <a target="_blank" href="https://gist.github.com/3334991">Gist</a> and modified <a target="_blank" href="http://news.ycombinator.com/item?id=4374888">here.</a></p>
+
+   <div id="rotate">
+     <img src="passV1.png" width="300" height="300" />
+     <img src="passV2.png" width="400" height="300" />
+   </div>
+   <big>How to:</big>
+   <p >This programs helps you generate unique passwords for sites, programs, etc...
+Run window.py from one of the folders.
+At first start python will record unique salt in pass.py and run generating password. You need to enter nick, url of site and master password. New password will be displayed in bottom form. Just copy it.</p>
+   <p align="left">Src on <a target="_blank" href="http://Friz-zy.github.com/passGui">Github</a></p>
+   <p>Code under <font color="#FF4500">MIT license</font>. Images and Photo under <font color="#FF4500">Creative Commons license</font>.</p>
+   <p>For quick use copy to bash:
+   <code>python -c "import hashlib, getpass;from itertools import cycle, izip;f = open('pass.py');salt = f.read();f.close();print hashlib.sha512(''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(hashlib.sha512(''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(salt, cycle(raw_input('nick:') + ' : ' + raw_input('site:'))))).hexdigest(), cycle(getpass.getpass())))).hexdigest()[:32]"</code></p>
+
+   <div align="center">
+     <p>Filipp Frizzy</p>
+   </div>
+
+ </div>
+
+
+
+ </body>
+</html> 
