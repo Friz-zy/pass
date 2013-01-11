@@ -4,6 +4,7 @@
 from pass_ui import Ui_Pass
 from PyQt4 import QtCore, QtGui
 import sys, random, time
+from listFiles import getFiles
 
 
 class Pass(QtGui.QWidget):
@@ -109,12 +110,14 @@ if __name__ == "__main__":
 	app = QtGui.QApplication(sys.argv)
 	myapp = Pass()
 	myapp.setFixedSize(600, 400)
-	br = QtGui.QBrush()
-	Image = QtGui.QImage("images/WG-0137.jpg_Thumbnail0.jpg")
-	br.setTextureImage(Image.scaled(600, 400))
-	plt = myapp.palette()
-	plt.setBrush(plt.Background, br)
-	myapp.setPalette(plt)
+	randImage = random.choice(getFiles("./images"))
+	if randImage:
+		br = QtGui.QBrush()
+		Image = QtGui.QImage(randImage)
+		br.setTextureImage(Image.scaled(600, 400))
+		plt = myapp.palette()
+		plt.setBrush(plt.Background, br)
+		myapp.setPalette(plt)
 	myapp.show()
 
 	sys.exit(app.exec_())
