@@ -1,8 +1,8 @@
 ##TODO
-+ Add criptography
-+ Add more fields in table
++ Add criptography for maxi
++ Add more fields in table for maxi
 + Add copy to clipboard
-+ Add synchronization with server/other devices
++ Add synchronization with server/other devices for maxi
 + Add .deb package
 + Add python install.py and egg
 
