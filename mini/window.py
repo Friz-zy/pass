@@ -3,8 +3,8 @@
 # http://habrahabr.ru/post/31426/
 from pass_ui import Ui_Pass
 from PyQt4 import QtCore, QtGui
-import sys
-
+import sys, hashlib
+from itertools import cycle, izip
 
 class Pass(QtGui.QWidget):
 	def __init__(self, parent=None):
@@ -14,8 +14,6 @@ class Pass(QtGui.QWidget):
 		self.ui.lineEditPass.setEchoMode(self.ui.lineEditPass.Password)
 		QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.add)
 
-	def add(self):
-		import hashlib
 		# use pass.py as salt and check the unique
 		with open('pass.py') as f:
 			salt = f.readlines()
@@ -36,22 +34,23 @@ class Pass(QtGui.QWidget):
 				with open('pass.py', "a") as f:
 					f.writeline("#" + hashlib.sha512(clock()).hexdigest())
 
-		from itertools import cycle, izip
-		# XOR function, thk The Internet
-		def xor(ss, key):
-			key = cycle(key)
-			return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key))
 
+	def add(self):
 		with open('pass.py') as f:
 			salt = f.read()
 		nick = str(self.ui.lineEditUser.text()) + " : " + str(self.ui.lineEditURL.text())
-		firstXor = xor(salt, nick)
+		firstXor = self.xor(salt, nick)
 		self.ui.lineEditURL.clear()
 		self.ui.lineEditUser.clear()
 		firstSha = hashlib.sha512(firstXor).hexdigest()
-		password = hashlib.sha512(xor(firstSha, str(self.ui.lineEditPass.text()))).hexdigest()[:32]
+		password = hashlib.sha512(self.xor(firstSha, str(self.ui.lineEditPass.text()))).hexdigest()[:32]
 		self.ui.lineEditPass.clear()
 		self.ui.lineEditGive.setText(password)
+
+	# XOR function, thk The Internet
+	def xor(self, ss, key):
+		key = cycle(key)
+		return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key))
 
 
 if __name__ == "__main__":
