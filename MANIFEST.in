@@ -1,0 +1,2 @@
+recursive-include ./maxi *
+recursive-include ./  README.md

@@ -1,0 +1,11 @@
+__author__ = "Filipp Frizzy"
+__copyright__ = ""
+__credits__ = ["Filipp Frizzy"]
+__license__ = "MIT"
+__version__ = "2.0"
+__maintainer__ = "Filipp Frizzy"
+__email__ = "filipp.s.frizzy@gmail.com"
+__status__ = "Development"
+__description__ = "This programs helps you generate unique passwords for sites, programs, etc..."
+__keywords__ = "python password generate save keep qt qt4 pyqt4"
+__url__ = "https://github.com/Friz-zy/passGui"
