@@ -1,6 +1,26 @@
 #!/usr/bin/env python2
 # coding=utf-8
 # http://habrahabr.ru/post/31426/
+
+"""
+db = KPDB("foo.kdb", "bar")
+db.lock()
+
+db.groups[] # internet, mail
+db.create_group("foobar", db.groups[0]) # Internet: -foobar
+db.create_group(self, id_=None, title=None, image=1, db=None, level=0, parent=None, children=[], entries=[], creation=None, last_mod=None, last_access=None, expire=None, flags=None)
+create_entry(self, group=None, title='', image=1, url='', username='', password='', comment='', y=2999, mon=12, d=28, h=23, min_=59, s=59)
+
+remove_entry(self, entry=None)
+remove_group(self, group=None)
+
+db.save("foo.kdb", "bar")
+db.unlock("bar")
+db.close() 
+del db
+"""
+
+
 from main_pass_ui import Ui_Pass
 from PyQt4 import QtCore, QtGui
 from listFiles import getFiles
@@ -22,9 +42,9 @@ class Pass(QtGui.QMainWindow):
 		self.ui.deliteButton.setEnabled(False)
 		self.ui.saveButton.setEnabled(False)
 
-		QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.add)
-		QtCore.QObject.connect(self.ui.deliteButton,QtCore.SIGNAL("clicked()"), self.delete)
-		QtCore.QObject.connect(self.ui.saveButton,QtCore.SIGNAL("clicked()"), self.save)
+		self.ui.pushButton.clicked.connect(self.add)
+		self.ui.deliteButton.clicked.connect(self.delete)
+		self.ui.saveButton.clicked.connect(self.save)
 		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
 
 		self.password = ""
@@ -38,15 +58,18 @@ class Pass(QtGui.QMainWindow):
 		self.changePasswordAction = QtGui.QAction('&Change Password', self)
 		self.aboutAction = QtGui.QAction('&About', self)
 
-		self.quitAction = QtGui.QAction(QtGui.QIcon('images/exit.png'),'&Quit', self)
+		self.quitAction = QtGui.QAction(QtGui.QIcon('icons/exit.png'),'&Quit', self)
 
 		self.createNewAction.triggered.connect(self.createDatabase)
+		self.loadAction.setShortcut('Ctrl+O')
+		self.loadAction.setStatusTip('Opening Database')
 		self.loadAction.triggered.connect(self.setDatabase)
+		self.saveAction.setShortcut('Ctrl+S')
+		self.saveAction.setStatusTip('Saving Database')
 		self.saveAction.triggered.connect(self.saveDatabase)
 		self.saveAsAction.triggered.connect(self.saveAsDatabase)
 		self.changePasswordAction.triggered.connect(self.getPassword)
 		self.aboutAction.triggered.connect(self.about)
-
 		self.quitAction.setShortcut('Ctrl+Q')
 		self.quitAction.setStatusTip('Exit application')
 		self.quitAction.triggered.connect(self.close)
@@ -68,13 +91,13 @@ class Pass(QtGui.QMainWindow):
 		self.trayIconMenu.addAction(self.changePasswordAction)
 		self.trayIconMenu.addAction(self.aboutAction)
 		self.trayIconMenu.addAction(self.quitAction)
-		self.trayIconPixmap = QtGui.QPixmap('images/ps.png')
+		self.trayIconPixmap = QtGui.QPixmap('icons/ps.png')
 		self.trayIcon = QtGui.QSystemTrayIcon(self)
 		self.trayIcon.setContextMenu(self.trayIconMenu)
 		self.trayIcon.setIcon(QtGui.QIcon(self.trayIconPixmap))
 		self.trayIcon.show()
 
-		self.setWindowIcon(QtGui.QIcon('images/ps.png'))
+		self.setWindowIcon(QtGui.QIcon('icons/ps.png'))
 
 		# check the unique salt
 		salt = "##"
@@ -108,8 +131,13 @@ class Pass(QtGui.QMainWindow):
 			self.ui.saveButton.setEnabled(True)
 
 
-	def showFileDialog(self):
+	def showFileOnenDialog(self):
+	# QStringList 	getOpenFileNames ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
 		return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+
+	def showFileSaveDialog(self):
+	# QString 	getSaveFileName ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
+		return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '/home')
 
 	def showMessage(self, title, text):
 		QtGui.QMessageBox.information(self, title, text)
@@ -118,20 +146,36 @@ class Pass(QtGui.QMainWindow):
 		QtGui.QMessageBox.critical(self, title, text)
 
 	def createDatabase(self):
-		self.db = KPDB(new=True)
+		file = self.showFileSaveDialog()
+		try:
+			self.db = KPDB(filepath=file, password=self.password, new=True)
+			self.db.lock()
+		except KPError as err:
+			self.showCritical("Some error occurred when opening %s" %(file), err)
 
-	def setDatabase(self):
-		file = self.showFileDialog()
+	def setDatabase(self, file=None):
+		if self.db:
+			self.db.saveDatabase
+			self.db.unlock(self.password)
+			self.db.close()
+		if not file:
+			file = self.showFileOnenDialog()
 		self.getPassword(file)
 		try:
-			db = KPDB(file, self.password)
+			self.db = KPDB(file, self.password)
+			self.db.lock()
 		except KPError as err:
-		  self.showCritical("Some error occurred when opening %s" %(file), err)
+			self.showCritical("Some error occurred when opening %s" %(file), err)
 
-	def saveDatabase(self):pass
-
-	def saveAsDatabase(self):pass
-
+	def saveDatabase(self):
+		if self.db:
+			self.db.save(password=self.password)
+			
+	def saveAsDatabase(self):
+		file = self.showFileSaveDialog()
+		if self.db and file:
+			self.db.save(filepath=file, password=self.password)
+			
 	def getPassword(self, databaseName = None):
 		if not databaseName:
 			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter your password:')
