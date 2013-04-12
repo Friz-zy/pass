@@ -1,27 +1,83 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 # coding=utf-8
 # http://habrahabr.ru/post/31426/
-from pass_ui import Ui_Pass
+from main_pass_ui import Ui_Pass
 from PyQt4 import QtCore, QtGui
-import sys, random, time, hashlib, os.path
 from listFiles import getFiles
+from kppy import KPDB, KPError
 from time import clock
 from itertools import cycle, izip
+import sys
+import random
+import time
+import hashlib
+import os.path
 
-class Pass(QtGui.QWidget):
+class Pass(QtGui.QMainWindow):
 	def __init__(self, parent=None):
-		QtGui.QWidget.__init__(self, parent)
+		QtGui.QMainWindow.__init__(self, parent)
 		self.ui = Ui_Pass()
 		self.ui.setupUi(self)
 		self.ui.lineEditPass.setEchoMode(self.ui.lineEditPass.Password)
 		self.ui.deliteButton.setEnabled(False)
 		self.ui.saveButton.setEnabled(False)
+
 		QtCore.QObject.connect(self.ui.pushButton,QtCore.SIGNAL("clicked()"), self.add)
 		QtCore.QObject.connect(self.ui.deliteButton,QtCore.SIGNAL("clicked()"), self.delete)
 		QtCore.QObject.connect(self.ui.saveButton,QtCore.SIGNAL("clicked()"), self.save)
-		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLogin)
+		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
 
-		# use this code as salt and check the unique
+		self.password = ""
+		self.getPassword()
+
+		# tray & menu
+		self.createNewAction = QtGui.QAction('&Create new database', self)
+		self.loadAction = QtGui.QAction('&Load database', self)
+		self.saveAction = QtGui.QAction('&Save database', self)
+		self.saveAsAction = QtGui.QAction('&Save database as', self)
+		self.changePasswordAction = QtGui.QAction('&Change Password', self)
+		self.aboutAction = QtGui.QAction('&About', self)
+
+		self.quitAction = QtGui.QAction(QtGui.QIcon('images/exit.png'),'&Quit', self)
+
+		self.createNewAction.triggered.connect(self.createDatabase)
+		self.loadAction.triggered.connect(self.setDatabase)
+		self.saveAction.triggered.connect(self.saveDatabase)
+		self.saveAsAction.triggered.connect(self.saveAsDatabase)
+		self.changePasswordAction.triggered.connect(self.getPassword)
+		self.aboutAction.triggered.connect(self.about)
+
+		self.quitAction.setShortcut('Ctrl+Q')
+		self.quitAction.setStatusTip('Exit application')
+		self.quitAction.triggered.connect(self.close)
+
+		self.fileMenu = self.ui.menubar.addMenu('&File')
+		self.fileMenu.addAction(self.createNewAction)
+		self.fileMenu.addAction(self.loadAction)
+		self.fileMenu.addAction(self.saveAction)
+		self.fileMenu.addAction(self.saveAsAction)
+		self.fileMenu.addAction(self.changePasswordAction)
+		self.fileMenu.addAction(self.aboutAction)
+		self.fileMenu.addAction(self.quitAction)
+
+		self.trayIconMenu = QtGui.QMenu(self)
+		self.trayIconMenu.addAction(self.createNewAction)
+		self.trayIconMenu.addAction(self.loadAction)
+		self.trayIconMenu.addAction(self.saveAction)
+		self.trayIconMenu.addAction(self.saveAsAction)
+		self.trayIconMenu.addAction(self.changePasswordAction)
+		self.trayIconMenu.addAction(self.aboutAction)
+		self.trayIconMenu.addAction(self.quitAction)
+		self.trayIconPixmap = QtGui.QPixmap('images/ps.png')
+		self.trayIcon = QtGui.QSystemTrayIcon(self)
+		self.trayIcon.setContextMenu(self.trayIconMenu)
+		self.trayIcon.setIcon(QtGui.QIcon(self.trayIconPixmap))
+		self.trayIcon.show()
+
+		self.setWindowIcon(QtGui.QIcon('images/ps.png'))
+
+		# check the unique salt
+		salt = "##"
 		with open('pass.py') as f:
 			salt = f.readlines()
 		# if salt isn't unique: add some unique string to it
@@ -40,6 +96,7 @@ class Pass(QtGui.QWidget):
 					f.writeline("#" + hashlib.sha512(clock()).hexdigest())
 
 		# Get list user's urls
+		urls = []
 		with open("urls") as f:
 			self.urls = f.readlines()
 		for S in self.urls:
@@ -50,8 +107,45 @@ class Pass(QtGui.QWidget):
 			self.ui.deliteButton.setEnabled(True)
 			self.ui.saveButton.setEnabled(True)
 
-	# choice URL from list
-	def getLogin(self):
+
+	def showFileDialog(self):
+		return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+
+	def showMessage(self, title, text):
+		QtGui.QMessageBox.information(self, title, text)
+
+	def showCritical(self, title, text):
+		QtGui.QMessageBox.critical(self, title, text)
+
+	def createDatabase(self):
+		self.db = KPDB(new=True)
+
+	def setDatabase(self):
+		file = self.showFileDialog()
+		self.getPassword(file)
+		try:
+			db = KPDB(file, self.password)
+		except KPError as err:
+		  self.showCritical("Some error occurred when opening %s" %(file), err)
+
+	def saveDatabase(self):pass
+
+	def saveAsDatabase(self):pass
+
+	def getPassword(self, databaseName = None):
+		if not databaseName:
+			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter your password:')
+		else:
+			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter password for %s:') % (databaseName)
+		if ok:
+			self.password = str(text)
+			self.ui.lineEditPass.setText(self.password)
+
+	def about(self):
+		about = ""
+		self.showMessage("About paSs", about)
+
+	def getLoginFromList(self):
 		item = self.ui.listWidget.takeItem(self.ui.listWidget.currentRow())
 		text = str(item.text())
 		#hack
@@ -88,7 +182,7 @@ class Pass(QtGui.QWidget):
 		self.ui.lineEditURL.clear()
 		self.ui.lineEditUser.clear()
 		firstSha = hashlib.sha512(firstXor).hexdigest()
-		password = hashlib.sha512(self.xor(firstSha, str(self.ui.lineEditPass.text()))).hexdigest()[:32]
+		password = hashlib.sha512(self.xor(firstSha, str(self.password))).hexdigest()[:32]
 		self.ui.lineEditPass.clear()
 		self.ui.lineEditGive.setText(password)
 		if nick != " : " and nick not in self.urls:

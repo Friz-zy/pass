@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 # coding=utf-8
 # http://habrahabr.ru/post/31426/
 from pass_ui import Ui_Pass
