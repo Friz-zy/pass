@@ -48,3 +48,4 @@ firstXor = xor(salt, nick)
 firstSha = hashlib.sha512(firstXor).hexdigest()
 print hashlib.sha512(xor(firstSha, getpass.getpass())).hexdigest()[:32]
 ##
+#63906529987bfa995ae98f5b900fcfa34f72f3750c58ad28c363f3d76a9bacc8d309fab15a55bd90b6aa6fc662b767c7b19c6bdd07fae128eab7ece258d35b83  -

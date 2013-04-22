@@ -1,2 +1,6 @@
-recursive-include ./maxi *
-recursive-include ./  README.md
+global-include *.md *.txt
+graft dir paSs
+graft dir images
+exclude paSs/ *.pyc
+global-exclude *.pyc
+

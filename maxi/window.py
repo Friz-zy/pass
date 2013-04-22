@@ -44,10 +44,11 @@ class Pass(QtGui.QMainWindow):
 
 		self.ui.pushButton.clicked.connect(self.add)
 		self.ui.deliteButton.clicked.connect(self.delete)
-		self.ui.saveButton.clicked.connect(self.save)
+		self.ui.saveButton.clicked.connect(self.saveDatabase)
 		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
 
 		self.password = ""
+		self.db = None
 		self.getPassword()
 
 		# tray & menu
@@ -133,54 +134,57 @@ class Pass(QtGui.QMainWindow):
 
 	def showFileOnenDialog(self):
 	# QStringList 	getOpenFileNames ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
-		return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+		return str(QtGui.QFileDialog.getOpenFileName(self, 'Open file', '~/'))
 
 	def showFileSaveDialog(self):
 	# QString 	getSaveFileName ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
-		return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '/home')
+		return str(QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '~/'))
 
 	def showMessage(self, title, text):
-		QtGui.QMessageBox.information(self, title, text)
+		QtGui.QMessageBox.information(self, str(title), str(text))
 
 	def showCritical(self, title, text):
-		QtGui.QMessageBox.critical(self, title, text)
+		QtGui.QMessageBox.critical(self, str(title), str(text))
 
 	def createDatabase(self):
-		file = self.showFileSaveDialog()
+		self.file = self.showFileSaveDialog()
+		print self.file
 		try:
-			self.db = KPDB(filepath=file, password=self.password, new=True)
+			self.db = KPDB(new=True)
 			self.db.lock()
 		except KPError as err:
-			self.showCritical("Some error occurred when opening %s" %(file), err)
+			self.showCritical("Some error occurred when opening %s" %(file), str(err))
 
 	def setDatabase(self, file=None):
 		if self.db:
-			self.db.saveDatabase
+			self.saveDatabase()
 			self.db.unlock(self.password)
 			self.db.close()
 		if not file:
-			file = self.showFileOnenDialog()
+			self.file = self.showFileOnenDialog()
 		self.getPassword(file)
 		try:
-			self.db = KPDB(file, self.password)
+			self.db = KPDB(self.file, self.password)
 			self.db.lock()
+			print self.db
 		except KPError as err:
-			self.showCritical("Some error occurred when opening %s" %(file), err)
+			self.showCritical("Some error occurred when opening %s" %(file), str(err))
 
 	def saveDatabase(self):
 		if self.db:
-			self.db.save(password=self.password)
+			print str(self.file), str(self.password)
+			self.db.save(filepath=str(self.file), password=str(self.password), keyfile="")
 			
 	def saveAsDatabase(self):
 		file = self.showFileSaveDialog()
 		if self.db and file:
-			self.db.save(filepath=file, password=self.password)
+			self.db.save(filepath=str(self.file), password=str(self.password), keyfile="")
 			
 	def getPassword(self, databaseName = None):
 		if not databaseName:
 			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter your password:')
 		else:
-			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter password for %s:') % (databaseName)
+			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter password for %s:' % (str(databaseName)))
 		if ok:
 			self.password = str(text)
 			self.ui.lineEditPass.setText(self.password)
@@ -201,10 +205,6 @@ class Pass(QtGui.QMainWindow):
 		self.ui.lineEditUser.setText(text[:b])
 		self.ui.lineEditURL.setText(text[b+3:])
 		self.ui.lineEditPass.setFocus()
-
-	def save(self):
-		with open("urls", "w") as f:
-			f.write('\n'.join(self.urls))
 
 	def delete(self):
 		# dirty hack
