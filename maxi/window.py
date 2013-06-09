@@ -2,54 +2,34 @@
 # coding=utf-8
 # http://habrahabr.ru/post/31426/
 
-"""
-db = KPDB("foo.kdb", "bar")
-db.lock()
-
-db.groups[] # internet, mail
-db.create_group("foobar", db.groups[0]) # Internet: -foobar
-db.create_group(self, id_=None, title=None, image=1, db=None, level=0, parent=None, children=[], entries=[], creation=None, last_mod=None, last_access=None, expire=None, flags=None)
-create_entry(self, group=None, title='', image=1, url='', username='', password='', comment='', y=2999, mon=12, d=28, h=23, min_=59, s=59)
-
-remove_entry(self, entry=None)
-remove_group(self, group=None)
-
-db.save("foo.kdb", "bar")
-db.unlock("bar")
-db.close() 
-del db
-"""
 
 
+import sys
+import random
 from main_pass_ui import Ui_Pass
 from PyQt4 import QtCore, QtGui
 from listFiles import getFiles
-from kppy import KPDB, KPError
-from time import clock
-from itertools import cycle, izip
-import sys
-import random
-import time
-import hashlib
-import os.path
+from keeper import Keeper
+from generator import Generator
+
 
 class Pass(QtGui.QMainWindow):
 	def __init__(self, parent=None):
 		QtGui.QMainWindow.__init__(self, parent)
+		
+		self.loadConfig()
+		
 		self.ui = Ui_Pass()
 		self.ui.setupUi(self)
 		self.ui.lineEditPass.setEchoMode(self.ui.lineEditPass.Password)
 		self.ui.deliteButton.setEnabled(False)
 		self.ui.saveButton.setEnabled(False)
+		self.ui.listWidget.setSortingEnabled(True)
 
 		self.ui.pushButton.clicked.connect(self.add)
 		self.ui.deliteButton.clicked.connect(self.delete)
 		self.ui.saveButton.clicked.connect(self.saveDatabase)
 		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
-
-		self.password = ""
-		self.db = None
-		self.getPassword()
 
 		# tray & menu
 		self.createNewAction = QtGui.QAction('&Create new database', self)
@@ -100,91 +80,71 @@ class Pass(QtGui.QMainWindow):
 
 		self.setWindowIcon(QtGui.QIcon('icons/ps.png'))
 
-		# check the unique salt
-		salt = "##"
-		with open('pass.py') as f:
-			salt = f.readlines()
-		# if salt isn't unique: add some unique string to it
-		if "#" in salt[-1][1]:
-			try:
-				os.popen("(dmesg;env;head -c16 /dev/random)|sha512sum >> ./pass.py")
-				with open('pass.py', "r") as f:
-					salt = f.readlines()
-				salt[-1]="#" + salt[-1]
-				with open('pass.py', "w") as f:
-					f.writelines(salt)
-				os.popen("chmod 400 ./pass.py") # only your user can read this file
-			except IOError, OSError:
-				# it is works in all OS, but clock() is most efficient in Windows
-				with open('pass.py', "a") as f:
-					f.writeline("#" + hashlib.sha512(clock()).hexdigest())
+		# initialization of variables
+		self.file = None
+		self.password = ""
+		self.getPassword()
+		self.keeper = Keeper()
+		if not self.keeper.isKdb:
+			self.showMessage("Warning!", "Can't load kpdb module. Nickname will be saved in plain text, passwords will be not saved.")
 
-		# Get list user's urls
-		urls = []
-		with open("urls") as f:
-			self.urls = f.readlines()
-		for S in self.urls:
-			self.ui.listWidget.insertItem(0, S)
+		#self.setDatabase()
+		self.generator = Generator(self)
+		self.generator.set_salt("./pass.py")
 
-		# Enable buttons
-		if self.urls:
+	def getUsersUrls(self):
+		#self.urls = self.keeper.urls
+		self.ui.listWidget.clear()
+		for url in self.keeper.urls.keys():
+			for name in self.keeper.urls[url].keys():
+				if name != "SUSTEM" and url != "$":
+					self.ui.listWidget.insertItem(0, str(url) + " : " + str(name))
+		if self.ui.listWidget.count():
 			self.ui.deliteButton.setEnabled(True)
 			self.ui.saveButton.setEnabled(True)
 
-
-	def showFileOnenDialog(self):
-	# QStringList 	getOpenFileNames ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
-		return str(QtGui.QFileDialog.getOpenFileName(self, 'Open file', '~/'))
-
-	def showFileSaveDialog(self):
-	# QString 	getSaveFileName ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
-		return str(QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '~/'))
-
-	def showMessage(self, title, text):
-		QtGui.QMessageBox.information(self, str(title), str(text))
-
-	def showCritical(self, title, text):
-		QtGui.QMessageBox.critical(self, str(title), str(text))
+	def loadConfig(self): pass
 
 	def createDatabase(self):
-		self.file = self.showFileSaveDialog()
-		print self.file
 		try:
-			self.db = KPDB(new=True)
-			self.db.lock()
-		except KPError as err:
-			self.showCritical("Some error occurred when opening %s" %(file), str(err))
+			self.file = str(self.showFileSaveDialog())
+			if file:
+				self.keeper = Keeper()
+		except: self.showCritical("","")
 
 	def setDatabase(self, file=None):
-		if self.db:
-			self.saveDatabase()
-			self.db.unlock(self.password)
-			self.db.close()
+		if self.file:
+			self.keeper.save(file,password)
 		if not file:
-			self.file = self.showFileOnenDialog()
-		self.getPassword(file)
+			file = self.file = self.showFileOnenDialog()
+		else:
+			self.file = file
+		if file or not self.password:
+			self.getPassword(file)
 		try:
-			self.db = KPDB(self.file, self.password)
-			self.db.lock()
-			print self.db
-		except KPError as err:
-			self.showCritical("Some error occurred when opening %s" %(file), str(err))
+			self.keeper.load(file, self.password)
+			self.getUsersUrls()
+		except:
+			self.showCritical("Some error occurred when opening %s" %(file), "Some error with set db")
 
 	def saveDatabase(self):
-		if self.db:
-			print str(self.file), str(self.password)
-			self.db.save(filepath=str(self.file), password=str(self.password), keyfile="")
-			
+		if  self.file:
+			self.keeper.save(self.file, self.password)
+		else:
+			self.saveAsDatabase()
+
 	def saveAsDatabase(self):
 		file = self.showFileSaveDialog()
-		if self.db and file:
-			self.db.save(filepath=str(self.file), password=str(self.password), keyfile="")
-			
+		if file:
+			self.keeper.save(file, self.password)
+			self.file = file
+
 	def getPassword(self, databaseName = None):
 		if not databaseName:
 			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter your password:')
 		else:
-			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter password for %s:' % (str(databaseName)))
+			text = 'Enter password for %s:' % (str(databaseName))
+			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', text)
 		if ok:
 			self.password = str(text)
 			self.ui.lineEditPass.setText(self.password)
@@ -194,52 +154,58 @@ class Pass(QtGui.QMainWindow):
 		self.showMessage("About paSs", about)
 
 	def getLoginFromList(self):
-		item = self.ui.listWidget.takeItem(self.ui.listWidget.currentRow())
+		item = self.ui.listWidget.item(self.ui.listWidget.currentRow())
 		text = str(item.text())
-		#hack
-		for u in self.urls:
-			if str(text) == u:
-				self.urls.remove(u)
-
 		b = text.find(" : ")
-		self.ui.lineEditUser.setText(text[:b])
-		self.ui.lineEditURL.setText(text[b+3:])
+		self.ui.lineEditURL.setText(text[:b])
+		self.ui.lineEditUser.setText(text[b+3:])
 		self.ui.lineEditPass.setFocus()
 
 	def delete(self):
-		# dirty hack
 		item = self.ui.listWidget.takeItem(self.ui.listWidget.currentRow())
-		text = item.text()
-		for u in self.urls:
-			if str(text) == u:
-				self.urls.remove(u)
+		text = str(item.text())
+		begin = text.find(" : ")
+		url = text[:begin]
+		name = text[begin + 3:]
+		for u in self.keeper.urls.keys():
+			if u in url and name in self.keeper.urls[u].keys():
+				del self.keeper.urls[u][name]
 		self.ui.listWidget.removeItemWidget(item)
-		# Check if the list is empty - if yes, disable the deletebutton.
 		if not self.ui.listWidget.count():
 			self.ui.deliteButton.setEnabled(False)
 
 	def add(self):
-		with open('pass.py') as f:
-			salt = f.read()
-		nick = str(self.ui.lineEditUser.text()) + " : " + str(self.ui.lineEditURL.text())
-		firstXor = self.xor(salt, nick)
+		name = str(self.ui.lineEditUser.text())
+		url = str(self.ui.lineEditURL.text())
+		nick =  " : ".join((url, name)) 
+		password = self.generator.generate_simple(str(self.ui.lineEditUser.text()), str(self.ui.lineEditURL.text()), self.password, 32)
 		self.ui.lineEditURL.clear()
 		self.ui.lineEditUser.clear()
-		firstSha = hashlib.sha512(firstXor).hexdigest()
-		password = hashlib.sha512(self.xor(firstSha, str(self.password))).hexdigest()[:32]
-		self.ui.lineEditPass.clear()
+		#self.ui.lineEditPass.clear()
 		self.ui.lineEditGive.setText(password)
-		if nick != " : " and nick not in self.urls:
-			self.urls.append(nick)
+		if name and url and (url not in self.keeper.urls.keys() or name not in self.keeper.urls[url].keys() or password != self.keeper.urls[url][name][0]):
+			self.keeper.urls[url] = {name : [password, "simple 32"]}
 			self.ui.listWidget.insertItem(0, nick)
 			# enable buttons
 			self.ui.deliteButton.setEnabled(True)
 			self.ui.saveButton.setEnabled(True)
+			
+	def showFileOnenDialog(self):
+	# QStringList 	getOpenFileNames ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
+		return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '.')
 
-	# XOR function, thk The Internet
-	def xor(self, ss, key):
-		key = cycle(key)
-		return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key))
+	def showFileSaveDialog(self):
+	# QString 	getSaveFileName ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
+		return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '.')
+
+	def showMessage(self, title, text):
+		QtGui.QMessageBox.information(self, str(title), str(text))
+
+	def showCritical(self, title, text):
+		QtGui.QMessageBox.critical(self, str(title), str(text))
+
+
+
 
 
 if __name__ == "__main__":
