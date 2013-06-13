@@ -77,6 +77,7 @@ class Pass(QtGui.QMainWindow):
 		self.trayIcon.setContextMenu(self.trayIconMenu)
 		self.trayIcon.setIcon(QtGui.QIcon(self.trayIconPixmap))
 		self.trayIcon.show()
+		self.trayIcon.activated.connect(self.changeVisible)
 
 		self.setWindowIcon(QtGui.QIcon('icons/ps.png'))
 
@@ -203,6 +204,20 @@ class Pass(QtGui.QMainWindow):
 
 	def showCritical(self, title, text):
 		QtGui.QMessageBox.critical(self, str(title), str(text))
+	
+	def changeVisible(self,r):
+		if r == QtGui.QSystemTrayIcon.Trigger:
+			if self.isHidden():
+				self.showNormal()
+			else:
+				self.hide()
+	
+	def changeEvent(self, e):
+	# e.type(): 105 - hide, 99 - show
+		# to tray
+		if self.isMinimized():
+			self.hide()
+			e.ignore()
 
 
 
