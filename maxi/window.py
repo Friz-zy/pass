@@ -11,6 +11,7 @@ from PyQt4 import QtCore, QtGui
 from listFiles import getFiles
 from keeper import Keeper
 from generator import Generator
+from configobj import ConfigObj
 
 
 class Pass(QtGui.QMainWindow):
@@ -60,16 +61,16 @@ class Pass(QtGui.QMainWindow):
 		self.fileMenu.addAction(self.loadAction)
 		self.fileMenu.addAction(self.saveAction)
 		self.fileMenu.addAction(self.saveAsAction)
-		self.fileMenu.addAction(self.changePasswordAction)
+		#self.fileMenu.addAction(self.changePasswordAction)
 		self.fileMenu.addAction(self.aboutAction)
 		self.fileMenu.addAction(self.quitAction)
 
 		self.trayIconMenu = QtGui.QMenu(self)
-		self.trayIconMenu.addAction(self.createNewAction)
+		#self.trayIconMenu.addAction(self.createNewAction)
 		self.trayIconMenu.addAction(self.loadAction)
 		self.trayIconMenu.addAction(self.saveAction)
 		self.trayIconMenu.addAction(self.saveAsAction)
-		self.trayIconMenu.addAction(self.changePasswordAction)
+		#self.trayIconMenu.addAction(self.changePasswordAction)
 		self.trayIconMenu.addAction(self.aboutAction)
 		self.trayIconMenu.addAction(self.quitAction)
 		self.trayIconPixmap = QtGui.QPixmap('icons/ps.png')
@@ -82,16 +83,16 @@ class Pass(QtGui.QMainWindow):
 		self.setWindowIcon(QtGui.QIcon('icons/ps.png'))
 
 		# initialization of variables
-		self.file = None
 		self.password = ""
-		self.getPassword()
+		if self.file:
+			self.setDatabase()
+		else:
+			self.getPassword()
 		self.keeper = Keeper()
 		if not self.keeper.isKdb:
 			self.showMessage("Warning!", "Can't load kpdb module. Nickname will be saved in plain text, passwords will be not saved.")
-
-		#self.setDatabase()
 		self.generator = Generator(self)
-		self.generator.set_salt("./pass.py")
+		self.generator.set_salt(self.salt)
 
 	def getUsersUrls(self):
 		#self.urls = self.keeper.urls
@@ -104,7 +105,15 @@ class Pass(QtGui.QMainWindow):
 			self.ui.deliteButton.setEnabled(True)
 			self.ui.saveButton.setEnabled(True)
 
-	def loadConfig(self): pass
+	def loadConfig(self):
+		self.config = ConfigObj("./pass.conf")
+		self.file = self.config['file']
+		self.salt = self.config['salt']
+
+	def saveConfig(self):
+		self.config['file'] = self.file
+		self.config['salt'] = self.salt
+		self.config.write()
 
 	def createDatabase(self):
 		try:
@@ -113,20 +122,22 @@ class Pass(QtGui.QMainWindow):
 				self.keeper = Keeper()
 		except: self.showCritical("","")
 
-	def setDatabase(self, file=None):
-		if self.file:
-			self.keeper.save(file,password)
-		if not file:
-			file = self.file = self.showFileOnenDialog()
-		else:
-			self.file = file
-		if file or not self.password:
-			self.getPassword(file)
+	def setDatabase(self):
+		#if self.file:
+		#	self.keeper.save(file,password)
+		back_file = self.file
+		back_password = self.password
+		if not self.file:
+			self.file = self.showFileOnenDialog()
+		if self.file or not self.password:
+			self.getPassword(self.file)
 		try:
-			self.keeper.load(file, self.password)
+			self.keeper.load(self.file, self.password)
 			self.getUsersUrls()
 		except:
-			self.showCritical("Some error occurred when opening %s" %(file), "Some error with set db")
+			self.showCritical("Some error occurred when opening %s" %(self.file), "Some error with set db")
+			self.file = back_file
+			self.password = back_password
 
 	def saveDatabase(self):
 		if  self.file:
@@ -135,10 +146,11 @@ class Pass(QtGui.QMainWindow):
 			self.saveAsDatabase()
 
 	def saveAsDatabase(self):
-		file = self.showFileSaveDialog()
-		if file:
-			self.keeper.save(file, self.password)
-			self.file = file
+		if self.ui.listWidget.count():
+			file = self.showFileSaveDialog()
+			if file:
+				self.keeper.save(file, self.password)
+				self.file = file
 
 	def getPassword(self, databaseName = None):
 		if not databaseName:
@@ -219,11 +231,21 @@ class Pass(QtGui.QMainWindow):
 			self.hide()
 			e.ignore()
 
+	def closeEvent(self, e):
+		self.saveDatabase()
+		self.saveConfig()
+		print "bye!"
+		self.close()
+
 
 
 
 
 if __name__ == "__main__":
+	#import platform
+	#platform.system()
+	#'Linux'
+
 	app = QtGui.QApplication(sys.argv)
 	myapp = Pass()
 	myapp.setFixedSize(600, 400)
@@ -238,4 +260,3 @@ if __name__ == "__main__":
 	myapp.show()
 
 	sys.exit(app.exec_())
-
