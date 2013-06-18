@@ -25,12 +25,15 @@ class Pass(QtGui.QMainWindow):
 		self.ui.lineEditPass.setEchoMode(self.ui.lineEditPass.Password)
 		self.ui.deliteButton.setEnabled(False)
 		self.ui.saveButton.setEnabled(False)
+		self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Password)
 		self.ui.listWidget.setSortingEnabled(True)
 
 		self.ui.pushButton.clicked.connect(self.add)
 		self.ui.deliteButton.clicked.connect(self.delete)
 		self.ui.saveButton.clicked.connect(self.saveDatabase)
 		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
+		self.ui.checkBox.stateChanged.connect(self.setPasswordVisible)
+
 
 		# tray & menu
 		self.createNewAction = QtGui.QAction('&Create new database', self)
@@ -202,7 +205,13 @@ class Pass(QtGui.QMainWindow):
 			# enable buttons
 			self.ui.deliteButton.setEnabled(True)
 			self.ui.saveButton.setEnabled(True)
-			
+
+	def setPasswordVisible(self, e):
+		if e:
+			self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Password)
+		else:
+			self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Normal)
+
 	def showFileOnenDialog(self):
 	# QStringList 	getOpenFileNames ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
 		return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '.')

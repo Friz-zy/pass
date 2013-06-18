@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>763</width>
+    <height>553</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,6 +92,19 @@
        </spacer>
       </item>
       <item>
+       <widget class="QCheckBox" name="checkBox">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Hide password</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLineEdit" name="lineEditGive"/>
       </item>
      </layout>
@@ -141,7 +154,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>763</width>
      <height>21</height>
     </rect>
    </property>
