@@ -33,7 +33,10 @@ class Pass(QtGui.QMainWindow):
 		self.ui.saveButton.clicked.connect(self.saveDatabase)
 		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
 		self.ui.checkBox.stateChanged.connect(self.setPasswordVisible)
-
+		
+		# clipboard
+		self.globalClipboard = QtGui.QApplication.clipboard()
+		self.clipboard = QtGui.QClipboard
 
 		# tray & menu
 		self.createNewAction = QtGui.QAction('&Create new database', self)
@@ -70,11 +73,11 @@ class Pass(QtGui.QMainWindow):
 
 		self.trayIconMenu = QtGui.QMenu(self)
 		#self.trayIconMenu.addAction(self.createNewAction)
-		self.trayIconMenu.addAction(self.loadAction)
+		#self.trayIconMenu.addAction(self.loadAction)
 		self.trayIconMenu.addAction(self.saveAction)
 		self.trayIconMenu.addAction(self.saveAsAction)
 		#self.trayIconMenu.addAction(self.changePasswordAction)
-		self.trayIconMenu.addAction(self.aboutAction)
+		#self.trayIconMenu.addAction(self.aboutAction)
 		self.trayIconMenu.addAction(self.quitAction)
 		self.trayIconPixmap = QtGui.QPixmap('icons/ps.png')
 		self.trayIcon = QtGui.QSystemTrayIcon(self)
@@ -199,6 +202,7 @@ class Pass(QtGui.QMainWindow):
 		self.ui.lineEditUser.clear()
 		#self.ui.lineEditPass.clear()
 		self.ui.lineEditGive.setText(password)
+		self.clipboard.setText(self.globalClipboard, password)
 		if name and url and (url not in self.keeper.urls.keys() or name not in self.keeper.urls[url].keys() or password != self.keeper.urls[url][name][0]):
 			self.keeper.urls[url] = {name : [password, "simple 32"]}
 			self.ui.listWidget.insertItem(0, nick)
