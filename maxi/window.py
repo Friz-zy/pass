@@ -1,27 +1,41 @@
 #!/usr/bin/env python2
 # coding=utf-8
-# http://habrahabr.ru/post/31426/
-
-
 
 import sys
 import random
-from main_pass_ui import Ui_Pass
-from PyQt4 import QtCore, QtGui
-from listFiles import getFiles
 from keeper import Keeper
+from listFiles import getFiles
 from generator import Generator
 from configobj import ConfigObj
-
+from main_pass_ui import Ui_Pass
+try:
+  from PySide import QtCore, QtGui, QtWebKit, QtNetwork
+except:
+	try:
+		from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
+	except:
+		print >> sys.stderr, "Error: can't load PySide or PyQT"
+		sys.exit()
 
 class Pass(QtGui.QMainWindow):
 	def __init__(self, parent=None):
 		QtGui.QMainWindow.__init__(self, parent)
-		
-		self.loadConfig()
-		
 		self.ui = Ui_Pass()
 		self.ui.setupUi(self)
+		self.loadConfig()
+		
+		# set size and background
+		self.setFixedSize(600, 400)
+		randImage = random.choice(getFiles("./images"))
+		if randImage:
+			br = QtGui.QBrush()
+			Image = QtGui.QImage(randImage)
+			br.setTextureImage(Image.scaled(600, 400))
+			plt = self.palette()
+			plt.setBrush(plt.Background, br)
+			self.setPalette(plt)
+		self.setWindowIcon(QtGui.QIcon('icons/ps.png'))
+
 		self.ui.lineEditPass.setEchoMode(self.ui.lineEditPass.Password)
 		self.ui.deliteButton.setEnabled(False)
 		self.ui.saveButton.setEnabled(False)
@@ -31,7 +45,9 @@ class Pass(QtGui.QMainWindow):
 		self.ui.pushButton.clicked.connect(self.add)
 		self.ui.deliteButton.clicked.connect(self.delete)
 		self.ui.saveButton.clicked.connect(self.saveDatabase)
-		QtCore.QObject.connect(self.ui.listWidget, QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"), self.getLoginFromList)
+		QtCore.QObject.connect(self.ui.listWidget, 
+			  QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
+							  self.getLoginFromList)
 		self.ui.checkBox.stateChanged.connect(self.setPasswordVisible)
 		
 		# clipboard
@@ -39,25 +55,35 @@ class Pass(QtGui.QMainWindow):
 		self.clipboard = QtGui.QClipboard
 
 		# tray & menu
-		self.createNewAction = QtGui.QAction('&Create new database', self)
-		self.loadAction = QtGui.QAction('&Load database', self)
-		self.saveAction = QtGui.QAction('&Save database', self)
-		self.saveAsAction = QtGui.QAction('&Save database as', self)
-		self.changePasswordAction = QtGui.QAction('&Change Password', self)
-		self.aboutAction = QtGui.QAction('&About', self)
-
-		self.quitAction = QtGui.QAction(QtGui.QIcon('icons/exit.png'),'&Quit', self)
-
+		self.createNewAction = QtGui.QAction(QtGui.QIcon.fromTheme("document-new"),
+							      '&Create new database', self)
 		self.createNewAction.triggered.connect(self.createDatabase)
+
+		self.loadAction = QtGui.QAction(QtGui.QIcon.fromTheme("document-open"),
+								'&Load database', self)
 		self.loadAction.setShortcut('Ctrl+O')
 		self.loadAction.setStatusTip('Opening Database')
 		self.loadAction.triggered.connect(self.setDatabase)
+
+		self.saveAction = QtGui.QAction(QtGui.QIcon.fromTheme("document-save"),
+								 '&Save database', self)
 		self.saveAction.setShortcut('Ctrl+S')
 		self.saveAction.setStatusTip('Saving Database')
 		self.saveAction.triggered.connect(self.saveDatabase)
+
+		self.saveAsAction = QtGui.QAction(QtGui.QIcon.fromTheme("document-save-as"),
+								  '&Save database as', self)
 		self.saveAsAction.triggered.connect(self.saveAsDatabase)
-		self.changePasswordAction.triggered.connect(self.getPassword)
+		
+		self.changePasswordAction = QtGui.QAction('&Change Password', self)
+		self.changePasswordAction.triggered.connect(self.setPassword)
+
+		self.aboutAction = QtGui.QAction(QtGui.QIcon.fromTheme("help-about"),
+									'&About', self)
 		self.aboutAction.triggered.connect(self.about)
+
+		self.quitAction = QtGui.QAction(QtGui.QIcon.fromTheme("application-exit"),
+									    '&Quit', self)
 		self.quitAction.setShortcut('Ctrl+Q')
 		self.quitAction.setStatusTip('Exit application')
 		self.quitAction.triggered.connect(self.close)
@@ -67,17 +93,13 @@ class Pass(QtGui.QMainWindow):
 		self.fileMenu.addAction(self.loadAction)
 		self.fileMenu.addAction(self.saveAction)
 		self.fileMenu.addAction(self.saveAsAction)
-		#self.fileMenu.addAction(self.changePasswordAction)
+		self.fileMenu.addAction(self.changePasswordAction)
 		self.fileMenu.addAction(self.aboutAction)
 		self.fileMenu.addAction(self.quitAction)
 
 		self.trayIconMenu = QtGui.QMenu(self)
-		#self.trayIconMenu.addAction(self.createNewAction)
-		#self.trayIconMenu.addAction(self.loadAction)
 		self.trayIconMenu.addAction(self.saveAction)
 		self.trayIconMenu.addAction(self.saveAsAction)
-		#self.trayIconMenu.addAction(self.changePasswordAction)
-		#self.trayIconMenu.addAction(self.aboutAction)
 		self.trayIconMenu.addAction(self.quitAction)
 		self.trayIconPixmap = QtGui.QPixmap('icons/ps.png')
 		self.trayIcon = QtGui.QSystemTrayIcon(self)
@@ -86,35 +108,26 @@ class Pass(QtGui.QMainWindow):
 		self.trayIcon.show()
 		self.trayIcon.activated.connect(self.changeVisible)
 
-		self.setWindowIcon(QtGui.QIcon('icons/ps.png'))
-
-		# initialization of variables
+	def loadConfig(self):
+	# initialization of variables
 		self.password = ""
+		self.config = ConfigObj("./pass.conf")
+
+		self.file = self.config['file']
 		if self.file:
 			self.setDatabase()
 		else:
-			self.getPassword()
-		self.keeper = Keeper()
-		if not self.keeper.isKdb:
-			self.showMessage("Warning!", "Can't load kpdb module. Nickname will be saved in plain text, passwords will be not saved.")
+			self.setPassword()
+
+		self.salt = self.config['salt']
 		self.generator = Generator(self)
 		self.generator.set_salt(self.salt)
 
-	def getUsersUrls(self):
-		#self.urls = self.keeper.urls
-		self.ui.listWidget.clear()
-		for url in self.keeper.urls.keys():
-			for name in self.keeper.urls[url].keys():
-				if name != "SUSTEM" and url != "$":
-					self.ui.listWidget.insertItem(0, str(url) + " : " + str(name))
-		if self.ui.listWidget.count():
-			self.ui.deliteButton.setEnabled(True)
-			self.ui.saveButton.setEnabled(True)
-
-	def loadConfig(self):
-		self.config = ConfigObj("./pass.conf")
-		self.file = self.config['file']
-		self.salt = self.config['salt']
+		self.keeper = Keeper()
+		if not self.keeper.isKdb:
+			self.showMessage("Warning!", "Can't load kpdb module.",
+					  " Nickname will be saved in plain text,",
+						     " passwords will be not saved.")
 
 	def saveConfig(self):
 		self.config['file'] = self.file
@@ -136,14 +149,26 @@ class Pass(QtGui.QMainWindow):
 		if not self.file:
 			self.file = self.showFileOnenDialog()
 		if self.file or not self.password:
-			self.getPassword(self.file)
+			self.setPassword(self.file)
 		try:
 			self.keeper.load(self.file, self.password)
-			self.getUsersUrls()
+			self.setUsersUrls()
 		except:
-			self.showCritical("Some error occurred when opening %s" %(self.file), "Some error with set db")
+			self.showCritical("Some error occurred when opening %s" 
+					  %(self.file), "Some error with set db")
 			self.file = back_file
 			self.password = back_password
+
+	def setUsersUrls(self):
+		self.ui.listWidget.clear()
+		for url in self.keeper.urls.keys():
+			for name in self.keeper.urls[url].keys():
+				if name != "SUSTEM" and url != "$":
+					self.ui.listWidget.insertItem(0, 
+					      str(url) + " : " + str(name))
+		if self.ui.listWidget.count():
+			self.ui.deliteButton.setEnabled(True)
+			self.ui.saveButton.setEnabled(True)
 
 	def saveDatabase(self):
 		if  self.file:
@@ -158,9 +183,10 @@ class Pass(QtGui.QMainWindow):
 				self.keeper.save(file, self.password)
 				self.file = file
 
-	def getPassword(self, databaseName = None):
+	def setPassword(self, databaseName = None):
 		if not databaseName:
-			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', 'Enter your password:')
+			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog',
+							      'Enter your password:')
 		else:
 			text = 'Enter password for %s:' % (str(databaseName))
 			text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', text)
@@ -197,13 +223,15 @@ class Pass(QtGui.QMainWindow):
 		name = str(self.ui.lineEditUser.text())
 		url = str(self.ui.lineEditURL.text())
 		nick =  " : ".join((url, name)) 
-		password = self.generator.generate_simple(str(self.ui.lineEditUser.text()), str(self.ui.lineEditURL.text()), self.password, 32)
+		password = self.generator.generate_simple(str(self.ui.lineEditUser.text()),
+					  str(self.ui.lineEditURL.text()), self.password, 32)
 		self.ui.lineEditURL.clear()
 		self.ui.lineEditUser.clear()
-		#self.ui.lineEditPass.clear()
 		self.ui.lineEditGive.setText(password)
 		self.clipboard.setText(self.globalClipboard, password)
-		if name and url and (url not in self.keeper.urls.keys() or name not in self.keeper.urls[url].keys() or password != self.keeper.urls[url][name][0]):
+		if name and url and (url not in self.keeper.urls.keys() \
+		  or name not in self.keeper.urls[url].keys() \
+		    or password != self.keeper.urls[url][name][0]):
 			self.keeper.urls[url] = {name : [password, "simple 32"]}
 			self.ui.listWidget.insertItem(0, nick)
 			# enable buttons
@@ -217,11 +245,9 @@ class Pass(QtGui.QMainWindow):
 			self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Normal)
 
 	def showFileOnenDialog(self):
-	# QStringList 	getOpenFileNames ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
 		return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '.')
 
 	def showFileSaveDialog(self):
-	# QString 	getSaveFileName ( QWidget * parent = 0, const QString & caption = QString(), const QString & dir = QString(), const QString & filter = QString(), QString * selectedFilter = 0, Options options = 0 )
 		return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '.')
 
 	def showMessage(self, title, text):
@@ -229,7 +255,7 @@ class Pass(QtGui.QMainWindow):
 
 	def showCritical(self, title, text):
 		QtGui.QMessageBox.critical(self, str(title), str(text))
-	
+
 	def changeVisible(self,r):
 		if r == QtGui.QSystemTrayIcon.Trigger:
 			if self.isHidden():
@@ -238,7 +264,6 @@ class Pass(QtGui.QMainWindow):
 				self.hide()
 	
 	def changeEvent(self, e):
-	# e.type(): 105 - hide, 99 - show
 		# to tray
 		if self.isMinimized():
 			self.hide()
@@ -255,21 +280,8 @@ class Pass(QtGui.QMainWindow):
 
 
 if __name__ == "__main__":
-	#import platform
-	#platform.system()
-	#'Linux'
-
 	app = QtGui.QApplication(sys.argv)
 	myapp = Pass()
-	myapp.setFixedSize(600, 400)
-	randImage = random.choice(getFiles("./images"))
-	if randImage:
-		br = QtGui.QBrush()
-		Image = QtGui.QImage(randImage)
-		br.setTextureImage(Image.scaled(600, 400))
-		plt = myapp.palette()
-		plt.setBrush(plt.Background, br)
-		myapp.setPalette(plt)
 	myapp.show()
 
 	sys.exit(app.exec_())
