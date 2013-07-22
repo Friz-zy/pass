@@ -11,6 +11,10 @@ This programs helps you generate unique passwords for sites, programs, etc...
 Run window.py from one of the folders.
 At first start python will record unique salt in pass.py and run generating password. You need to enter nick, url of site and master password. New password will be displayed in bottom form. Just copy it.
 
+##How to install:##
+If you know about python [easy_install](http://www.google.com/search?q=python+egg+install) and [pip](http://pypi.python.org/pypi/pip) - use it! Else expect packages or read about pip.
+
+
 Src on [Github](http://friz-zy.github.com)
 Code under **GNU LGPL v3 license** and Images and Photo under **Creative Commons license**
 
