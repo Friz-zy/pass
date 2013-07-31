@@ -53,7 +53,6 @@ class Generator():
 		password = hashlib.sha512(self.xor(firstSha, str(password))).hexdigest()[:lenght]
 		return password
 
-	# XOR function, thk The Internet
 	def xor(self, ss, key):
 		key = cycle(key)
 		return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key))

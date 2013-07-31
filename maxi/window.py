@@ -125,7 +125,7 @@ class Pass(QtGui.QMainWindow):
 
 		self.keeper = Keeper()
 		if not self.keeper.isKdb:
-			self.showMessage("Warning!", "Can't load kpdb module.",
+			self.showMessage("Warning!", "Can't load keepass module.",
 					  " Nickname will be saved in plain text,",
 						     " passwords will be not saved.")
 
