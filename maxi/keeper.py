@@ -84,11 +84,11 @@ class Keeper():
 	def save(self, file, password = ""):
 		if file:
 			if self.isKdb:
-				if file[-4:] != ".kdb": file += ".kdb"
+				if ".kdb" not in file: file += ".kdb"
 				self.sync_entries()
 				self.db.write(str(file), str(password))
 			else:
-				if file[-4:] != ".json": file += ".json"
+				if ".json" not in file: file += ".json"
 				self.sync_entries()
 				with open(file, "w") as f:
 					f.write(json.dumps(self.urls))
