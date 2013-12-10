@@ -42,7 +42,7 @@ class Keeper():
 							self.db.remove_entry(name,url)
 					except:
 						self.db.remove_entry(name,url)
-			# add all urls:pass that not in entries
+			# add all urls:pass that not in entries and update already exists
 			for url in self.urls.keys():
 				for name in self.urls[url].keys():
 					try:
