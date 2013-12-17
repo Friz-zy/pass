@@ -15,8 +15,11 @@ At first start python will record unique salt in pass.py and run generating pass
 If you know about python [easy_install](http://www.google.com/search?q=python+egg+install) and [pip](http://pypi.python.org/pypi/pip) - use it! Else expect packages or read about pip.
 
 
-Src on [Github](http://friz-zy.github.com)
+Src on [Github](https://github.com/Friz-zy/passGui)
 Code under **GNU LGPL v3 license** and Images and Photo under **Creative Commons license**
+External modules:
+* [configobj](https://pypi.python.org/pypi/configobj/) under BSD License
+* [PyQt4](https://pypi.python.org/pypi/PyQt4/4.10.3) under GPL or [PySide](https://pypi.python.org/pypi/PySide/1.2.1) under LGPL
 
 For quick use copy to bash:
 `python pass.py`

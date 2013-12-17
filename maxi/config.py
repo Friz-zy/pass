@@ -27,12 +27,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
+import os
+import sys
+import shutil
 import six
 from configobj import ConfigObj
 
-class Config(parent, name, defaultConfigPathPath=""):
-    def init(self, parent, name, defaultConfigPathPath=""):
+class Config:
+    def __init__(self, parent, name, defaultConfigPathPath=""):
         self.parent = parent
         self.name = str(name)
         self.homeDir = os.path.join(os.path.expanduser("~"), self.name)
@@ -50,41 +52,58 @@ class Config(parent, name, defaultConfigPathPath=""):
             try:
                 os.makedirs(self.homeDir)
             except:
-                six.print_(("Error: can't create %s" % self.homeDir), file=sys.stderr, end="\n", sep=" ")
-                six.print_(("Can not create user config"), file=sys.stderr, end="\n", sep=" ")
+                six.print_(("Error: can't create %s" % self.homeDir),
+                                    file=sys.stderr, end="\n", sep=" ")
+                six.print_(("Can not create user config"),
+                           file=sys.stderr, end="\n", sep=" ")
                 return 1
 
         for path in paths:
-            if os.path.exists(os.path.join(self.moduleDir, path)):
+            if os.path.exists(os.path.join(self.homeDir, path)):
+                continue
+            if os.path.isdir(os.path.join(self.moduleDir, path)):
+                try:
+                    shutil.copytree(os.path.join(self.moduleDir, path),
+                                        os.path.join(self.homeDir, path))
+                except:
+                    six.print_(("Error: can't create %s"  % os.path.join(self.homeDir, path)),
+                                                            file=sys.stderr, end="\n", sep=" ")                                                                                                  
+                    six.print_(("Maybe you haven't write acces to %s or %s doesn't exists" %  ((
+                                                self.homeDir, os.path.join(self.moduleDir, path)))),
+                                                                    file=sys.stderr, end="\n", sep=" ")
+
+            elif os.path.exists(os.path.join(self.moduleDir, path)):
                 try:
                     shutil.copy(os.path.join(self.moduleDir, path), os.path.join(self.homeDir, path))
                 except:
                     six.print_(("Error: can't create %s"  % os.path.join(self.homeDir, path)),
-                                                                                                    file=sys.stderr, end="\n", sep=" ")                                                                                                  
-                    six.print_(("Maybe you haven't write acces to %s or %s doesn't exists" %  ((self.homeDir,
-                                                                                                os.path.join(self.moduleDirectory, path)))),
-                                                                                                    file=sys.stderr, end="\n", sep=" ")
+                                                                file=sys.stderr, end="\n", sep=" ")                                                                                                  
+                    six.print_(("Maybe you haven't write acces to %s or %s doesn't exists" %  ((
+                                                self.homeDir, os.path.join(self.moduleDir, path)))),
+                                                                    file=sys.stderr, end="\n", sep=" ")
 
         if os.path.isfile(self.defaultConfigPath) and not os.path.isfile(self.homeConfigPath):
             try:
                 shutil.copy(self.defaultConfigPath, self.homeConfigPath)
             except:
-                six.print_(("Error: can't create %s" % self.homeConfigPath), file=sys.stderr, end="\n", sep=" ")
+                six.print_(("Error: can't create %s" % self.homeConfigPath),
+                                            file=sys.stderr, end="\n", sep=" ")
 
     def loadConfig(self):
         try:
             config = ConfigObj(self.defaultConfigPath)
         except:
-            six.print_(("Error: can't load %s as default config" % self.defaultConfigPath), file=sys.stderr, end="\n", sep=" ")
+            six.print_(("Error: can't load %s as default config" % self.defaultConfigPath),
+                                                        file=sys.stderr, end="\n", sep=" ")
             config = {}
         try:
             userConfig = ConfigObj(self.homeConfigPath)
         except:
-            six.print_(("Error: can't load %s as user config" % self.homeConfigPath), file=sys.stderr, end="\n", sep=" ")
+            six.print_(("Error: can't load %s as user config" % self.homeConfigPath),
+                                                    file=sys.stderr, end="\n", sep=" ")
             userConfig = {}
         
-        self.config = config.update(userConfig)
-            
+        self.config = dict(config.items() + userConfig.items())
         self.setFieldsFromDict(self.config)
 
     def setFieldsFromDict(self, d):
@@ -92,30 +111,32 @@ class Config(parent, name, defaultConfigPathPath=""):
             if isinstance(d[key], dict):
                 self.setFieldsFromDict(d[key])
             else:
-                self.setField(d[key])
+                self.setField(key)
 
-    def setField(field, default=None):
+    def setField(self, field, default=None):
         if not field:
-            six.print_(("can not set empty field to self"), file=sys.stderr, end="\n", sep=" ")
+            six.print_(("can not set empty field to self"),
+                            file=sys.stderr, end="\n", sep=" ")
             return 1
         elif self.config[field]:
             self.parent.__dict__[field] = self.config[field]
         else:
             self.parent.__dict__[field] = default
 
-    def saveFields(self, fields):
+    def saveConfig(self, fields):
         try:
             userConfig = ConfigObj(self.homeConfigPath)
         except:
-            six.print_(("Error: can't load %s as user config" % self.homeConfigPath), file=sys.stderr, end="\n", sep=" ")
+            six.print_(("Error: can't load %s as user config" % self.homeConfigPath),
+                                                    file=sys.stderr, end="\n", sep=" ")
             userConfig = ConfigObj()
             for field in fields:
                 userConfig[field] = self.parent.__dict__[field]
 
         for field in fields:
             self.setFieldToDict(field, userConfig)
-
-        userConfig.write(self.homeConfigPath)
+        with open(self.homeConfigPath, "w") as file:
+            userConfig.write(file)
 
     def setFieldToDict(self, field, d):
             for key in d.keys():
