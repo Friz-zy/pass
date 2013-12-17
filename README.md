@@ -18,6 +18,7 @@ If you know about python [easy_install](http://www.google.com/search?q=python+eg
 Src on [Github](https://github.com/Friz-zy/passGui)
 Code under **GNU LGPL v3 license** and Images and Photo under **Creative Commons license**
 External modules:
+* [keepass](https://github.com/brettviren/python-keepass) under GPL v2
 * [configobj](https://pypi.python.org/pypi/configobj/) under BSD License
 * [PyQt4](https://pypi.python.org/pypi/PyQt4/4.10.3) under GPL or [PySide](https://pypi.python.org/pypi/PySide/1.2.1) under LGPL
 
