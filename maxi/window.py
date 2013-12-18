@@ -103,7 +103,7 @@ class Pass(QtGui.QMainWindow):
         self.trayIconMenu.addAction(self.saveAction)
         self.trayIconMenu.addAction(self.saveAsAction)
         self.trayIconMenu.addAction(self.quitAction)
-        self.trayIconPixmap = QtGui.QPixmap(os.path.join("self.icons", "ps.png"))
+        self.trayIconPixmap = QtGui.QPixmap(os.path.join(self.icons, "ps.png"))
         self.trayIcon = QtGui.QSystemTrayIcon(self)
         self.trayIcon.setContextMenu(self.trayIconMenu)
         self.trayIcon.setIcon(QtGui.QIcon(self.trayIconPixmap))
@@ -267,10 +267,10 @@ class Pass(QtGui.QMainWindow):
             self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Normal)
 
     def showFileOnenDialog(self):
-        return QtGui.QFileDialog.getOpenFileName(self, 'Open file', '.')
+        return QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.homeDir)
 
     def showFileSaveDialog(self):
-        return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', '.')
+        return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', self.homeDir)
 
     def showMessage(self, title, text):
         QtGui.QMessageBox.information(self, str(title), str(text))
