@@ -158,10 +158,10 @@ class Pass(QtGui.QMainWindow):
 
     def createDatabase(self):
         try:
-            self.file = str(self.showFileSaveDialog())
+            self.file = str(self.showFileSaveDialog()[0])
             if file:
                 self.keeper = Keeper()
-        except: self.showCritical("","")
+        except: self.showCritical("Error","Can't create %s" % file)
 
     def setDatabase(self):
         #if self.file:
@@ -169,17 +169,18 @@ class Pass(QtGui.QMainWindow):
         back_file = self.file
         back_password = self.password
         if not self.file:
-            self.file = self.showFileOnenDialog()
-        if self.file or not self.password:
-            self.setPassword(self.file)
-        try:
-            self.keeper.load(self.file, self.password)
-            self.setUsersUrls()
-        except:
-            self.showCritical("Some error occurred when opening %s" 
-                      %(self.file), "Some error with set db")
-            self.file = back_file
-            self.password = back_password
+            self.file = self.showFileOpenDialog()[0]
+        if self.file: 
+            if not self.password:
+                self.setPassword(self.file)
+            try:
+                self.keeper.load(self.file, self.password)
+                self.setUsersUrls()
+            except:
+                self.showCritical("Some error with set db", "Some error occurred when opening %s as database" 
+                        %(self.file))
+                self.file = back_file
+                self.password = back_password
 
     def setUsersUrls(self):
         self.ui.listWidget.clear()
@@ -200,10 +201,12 @@ class Pass(QtGui.QMainWindow):
 
     def saveAsDatabase(self):
         if self.ui.listWidget.count():
-            file = self.showFileSaveDialog()
-            if file:
-                self.keeper.save(file, self.password)
-                self.file = file
+            try:
+                file = self.showFileSaveDialog()[0]
+                if file:
+                    self.keeper.save(file, self.password)
+                    self.file = file
+            except: self.showCritical("Error","Can't save %s" % file)
 
     def setPassword(self, databaseName = None):
         if not databaseName:
@@ -266,11 +269,17 @@ class Pass(QtGui.QMainWindow):
         else:
             self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Normal)
 
-    def showFileOnenDialog(self):
-        return QtGui.QFileDialog.getOpenFileName(self, 'Open file', self.homeDir)
+    def showFileOpenDialog(self, path="", filer=""):
+        if not path:
+            path = self.homeDir
+        return QtGui.QFileDialog.getOpenFileName(self,
+                      'Open file', path, filer)
 
-    def showFileSaveDialog(self):
-        return QtGui.QFileDialog.getSaveFileName(self, 'Save file as:', self.homeDir)
+    def showFileSaveDialog(self, path="", filer=""):
+        if not path:
+            path = self.homeDir
+        return QtGui.QFileDialog.getSaveFileName(self,
+                    'Save file as:', path, filer)
 
     def showMessage(self, title, text):
         QtGui.QMessageBox.information(self, str(title), str(text))
