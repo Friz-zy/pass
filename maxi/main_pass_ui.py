@@ -7,7 +7,15 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide import QtCore, QtGui
+import sys
+try:
+  from PySide import QtCore, QtGui
+except:
+    try:
+        from PyQt4 import QtCore, QtGui
+    except:
+        print >> sys.stderr, "Error: can't load PySide or PyQT"
+        sys.exit()
 
 class Ui_Pass(object):
     def setupUi(self, Pass):

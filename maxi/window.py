@@ -11,10 +11,10 @@ from configobj import ConfigObj
 from main_pass_ui import Ui_Pass
 from config import Config
 try:
-  from PySide import QtCore, QtGui, QtWebKit, QtNetwork
+  from PySide import QtCore, QtGui
 except:
     try:
-        from PyQt4 import QtCore, QtGui, QtWebKit, QtNetwork
+        from PyQt4 import QtCore, QtGui
     except:
         print >> sys.stderr, "Error: can't load PySide or PyQT"
         sys.exit()
