@@ -3,8 +3,8 @@
 Implementation of an algorithm generating and storing a passwords like this: "cf83e1357eefb8bdf1542850d66d8007". Written on python 2.7 and PyQT.
 Used `sha512(sha512("salt" XOR "nick : site") XOR "pass")[:32]` algorithm, created by [Gist](https://gist.github.com/3334991) and modified [here](http://news.ycombinator.com/item?id=4374888).
 
-Minimalistic interface -> mini
-Maximalistic interface with background images and saving authentications data -> maxi
+*Minimalistic interface -> mini
+*Maximalistic interface with background images and saving authentications data -> maxi
 
 ##How to:##
 This programs helps you generate unique passwords for sites, programs, etc...
