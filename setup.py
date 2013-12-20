@@ -30,12 +30,12 @@ setup(
     license = module.__license__,
     keywords = module.__keywords__,
     url = module.__url__,   # project home page, if any
-    install_requires = ['PyQt4>=4.0', 'configobj'],
+    install_requires = ['PySide', 'pycrypto', 'configobj','six'],
     package_data = {
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.txt', '*.rst', '*.md'],
         # And include any *.msg files found in the 'hello' package, too:
-        "paSs" : ['images/*', '*.*'],
+        "paSs" : ['images/*', 'icons/*', 'keepass/*', '*.*'],
     },
     packages=find_packages(),
     long_description=open(join(dirname(__file__), 'README.md')).read(),
@@ -43,9 +43,9 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts':
-            ['pass = paSs.window',],
+            ['pass = paSs.window:main',],
         'gui_scripts':
-            ['pass = paSs.window',],
+            ['pass = paSs.window:main',],
 #        'setuptools.installation':
 #            ['eggsecutable = ' + md + '.window',],
         }

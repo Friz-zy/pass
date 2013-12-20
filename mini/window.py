@@ -52,12 +52,12 @@ class Pass(QtGui.QWidget):
 		key = cycle(key)
 		return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key))
 
+def main():
+    app = QtGui.QApplication(sys.argv)
+    myapp = Pass()
+    myapp.show()
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
-
-	app = QtGui.QApplication(sys.argv)
-	myapp = Pass()
-	myapp.show()
-
-	sys.exit(app.exec_())
+    main()
 

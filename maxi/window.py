@@ -147,9 +147,9 @@ class Pass(QtGui.QMainWindow):
 
         self.keeper = Keeper()
         if not self.keeper.isKdb:
-            self.showMessage("Warning!", "Can't load keepass module.",
+            self.showMessage("Warning!", "".join(("Can't load keepass module.",
                       " Nickname will be saved in plain text,",
-                             " passwords will be not saved.")
+                             " passwords will be not saved.")))
 
     def saveConfig(self):
         if not self.file:
@@ -306,13 +306,11 @@ class Pass(QtGui.QMainWindow):
         print "bye!"
         self.close()
 
-
-
-
-
-if __name__ == "__main__":
+def main():
     app = QtGui.QApplication(sys.argv)
     myapp = Pass()
     myapp.show()
-
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
