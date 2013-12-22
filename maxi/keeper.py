@@ -53,19 +53,17 @@ class Keeper():
 							  name,
 							  self.urls[url][name][0],
 							  url,
-							  self.urls[url][name][1],
-							  imageid=1,
-							  append=True)
+							  self.urls[url][name][1])
 						else:
 							self.db.update_entry(
 							  " : ".join((url, name)),
 							  name,
 							  url,
-							  new_title=None,
-							  new_username=None,
-							  new_password=self.urls[url][name][0],
-							  new_url=None,
-							  new_notes=self.urls[url][name][1])
+							  "",
+							  "",
+							  self.urls[url][name][0],
+							  "",
+							  self.urls[url][name][1])
 					except:
 						self.db.add_entry(
 						  "Internet",
@@ -73,9 +71,7 @@ class Keeper():
 						  name,
 						  self.urls[url][name][0],
 						  url,
-						  self.urls[url][name][1],
-						  imageid=1,
-						  append=True)
+						  self.urls[url][name][1])
 		else:
 			for url in self.urls.keys():
 				for name in self.urls[url].keys():
