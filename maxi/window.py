@@ -204,8 +204,7 @@ class Pass(QtGui.QMainWindow):
             try:
                 file = self.showFileSaveDialog()[0]
                 if file:
-                    self.keeper.save(file, self.password)
-                    self.file = file
+                    self.file = self.keeper.save(file, self.password)
             except: self.showCritical("Error","Can't save %s" % file)
 
     def setPassword(self, databaseName = None):
