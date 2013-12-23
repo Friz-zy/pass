@@ -119,9 +119,7 @@ class Config:
                             file=sys.stderr, end="\n", sep=" ")
             return 1
         elif self.config[field]:
-            self.parent.__dict__[field] = self.config[field]
-        else:
-            self.parent.__dict__[field] = default
+            self.parent.__dict__[field] = self.config.get(field, default)
 
     def saveConfig(self, fields):
         try:
