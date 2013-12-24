@@ -277,7 +277,7 @@ class Pass(QtGui.QMainWindow):
             if choice == -1:
                 return -1
             elif choice:
-                self.saveAsDatabase()
+                self.saveDatabase()
             return 1
 
     def showChoice(self, title, text):
