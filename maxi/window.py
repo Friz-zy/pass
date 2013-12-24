@@ -112,6 +112,12 @@ class Pass(QtGui.QMainWindow):
 
     def loadConfig(self):
     # initialization of variables
+        self.keeper = Keeper()
+        if not self.keeper.isKdb:
+            self.showMessage("Warning!", "".join(("Can't load keepass module.",
+                      " Nickname will be saved in plain text,",
+                             " passwords will be not saved.")))
+
         self.password = ""
         self.file = ""
         self.salt = ""
@@ -122,7 +128,7 @@ class Pass(QtGui.QMainWindow):
         self.config.loadConfig() # self.file, self.salt, self.icons, self.images
 
         if self.file:
-            self.setDatabase()
+            self.setDatabase(self.file)
         else:
             self.setPassword()
 
@@ -145,34 +151,31 @@ class Pass(QtGui.QMainWindow):
         self.generator = Generator(self)
         self.generator.set_salt(self.salt)
 
-        self.keeper = Keeper()
-        if not self.keeper.isKdb:
-            self.showMessage("Warning!", "".join(("Can't load keepass module.",
-                      " Nickname will be saved in plain text,",
-                             " passwords will be not saved.")))
-
     def saveConfig(self):
         if not self.file:
             self.file = ""
         self.config.saveConfig(["file", "salt", "icons", "images"])
 
     def createDatabase(self):
+        if self.file and self.savePageBeforeClose() == -1:
+            return 0
         try:
             self.file = str(self.showFileSaveDialog()[0])
             if file:
                 self.keeper = Keeper()
         except: self.showCritical("Error","Can't create %s" % file)
 
-    def setDatabase(self):
-        #if self.file:
-        #    self.keeper.save(file,password)
+    def setDatabase(self, file=""):
+        if self.file and self.savePageBeforeClose() == -1:
+            return 0
         back_file = self.file
         back_password = self.password
-        if not self.file:
+        if not file:
             self.file = self.showFileOpenDialog()[0]
-        if self.file: 
-            if not self.password:
-                self.setPassword(self.file)
+        else:
+            self.file = file
+        self.setPassword(self.file)
+        if self.file and self.password: 
             try:
                 self.keeper.load(self.file, self.password)
                 self.setUsersUrls()
@@ -181,6 +184,9 @@ class Pass(QtGui.QMainWindow):
                         %(self.file))
                 self.file = back_file
                 self.password = back_password
+        else:
+            self.file = back_file
+            self.password = back_password
 
     def setUsersUrls(self):
         self.ui.listWidget.clear()
@@ -262,6 +268,31 @@ class Pass(QtGui.QMainWindow):
             self.ui.deliteButton.setEnabled(True)
             self.ui.saveButton.setEnabled(True)
 
+    def savePageBeforeClose(self):
+        if self.ui.listWidget.count():
+            q = "Do you want to save your changes?"
+            if self.file:
+                q = "Do you want to save your changes as %s?" % self.file
+            choice = self.showChoice("?!", q)
+            if choice == -1:
+                return -1
+            elif choice:
+                self.saveAsDatabase()
+            return 1
+
+    def showChoice(self, title, text):
+        q = QtGui.QMessageBox.question(self, 
+                  title,
+                  text,
+                  QtGui.QMessageBox.No |
+                  QtGui.QMessageBox.Cancel |
+                  QtGui.QMessageBox.Yes,)
+        if q == QtGui.QMessageBox.Yes:
+            return True
+        elif q == QtGui.QMessageBox.No:
+            return False
+        return -1
+
     def setPasswordVisible(self, e):
         if e:
             self.ui.lineEditGive.setEchoMode(self.ui.lineEditGive.Password)
@@ -300,7 +331,8 @@ class Pass(QtGui.QMainWindow):
             e.ignore()
 
     def closeEvent(self, e):
-        self.saveDatabase()
+        if self.savePageBeforeClose() != -1:
+            self.saveDatabase()
         self.saveConfig()
         print "bye!"
         self.close()
