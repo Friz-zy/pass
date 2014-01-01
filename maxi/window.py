@@ -10,6 +10,7 @@ from generator import Generator
 from configobj import ConfigObj
 from main_pass_ui import Ui_Pass
 from config import Config
+from dialogs import Password
 try:
   from PySide import QtCore, QtGui
 except:
@@ -215,11 +216,15 @@ class Pass(QtGui.QMainWindow):
 
     def setPassword(self, databaseName = None):
         if not databaseName:
-            text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog',
-                                  'Enter your password:')
+            dlg = Password('Input Password',
+                           'Input your password here:', self)
+            dlg.exec_()
+            text, ok = dlg.getPassword()
         else:
-            text = 'Enter password for %s:' % (str(databaseName))
-            text, ok = QtGui.QInputDialog.getText(self, 'Input Dialog', text)
+            text = 'Input your password for %s here:' % (str(databaseName))
+            dlg = Password('Input Password', text, self)
+            dlg.exec_()
+            text, ok = dlg.getPassword()
         if ok:
             self.password = str(text)
             self.ui.lineEditPass.setText(self.password)
