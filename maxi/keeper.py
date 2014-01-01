@@ -78,23 +78,23 @@ class Keeper():
                     self.urls[url][name][0] = "password"
     
     def save(self, file, password = ""):
+        def setMask(file, mask):
+            try:
+                os.chmod(file, mask)
+            except OSError: pass
         if file:
             if self.isKdb:
                 if ".kdb" not in file: file += ".kdb"
                 self.sync_entries()
                 self.db.write(str(file), str(password))
-                try:
-                    os.chmod(file, 384) # only your user can read and write this file
-                except OSError:
-                    pass
+                # only your user can read and write this file
+                setMask(str(file), mask)
                 return file
             else:
                 if ".json" not in file: file += ".json"
                 self.sync_entries()
                 with open(file, "w") as f:
                     f.write(json.dumps(self.urls))
-                try:
-                    os.chmod(file, 384) # only your user can read and write this file
-                except OSError:
-                    pass
+                # only your user can read and write this file
+                setMask(str(file), mask)
                 return file
