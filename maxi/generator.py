@@ -42,10 +42,10 @@ class Generator():
 			# it is works in all OS, but clock() is most efficient in Windows
 			with open(file, "a") as f:
 				f.writeline("#" + hashlib.sha512(clock()).hexdigest())
-            try:
-                os.chmod(file, 400) # only your user can read this file
-            except OSError:
-                pass
+			try:
+				os.chmod(file, 400) # only your user can read this file
+			except OSError:
+				pass
 
 	def generate_simple(self, nikname = "", url = "", password = "", lenght = 32):
 		lenght = int(lenght)
