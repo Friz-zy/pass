@@ -83,10 +83,18 @@ class Keeper():
                 if ".kdb" not in file: file += ".kdb"
                 self.sync_entries()
                 self.db.write(str(file), str(password))
+                try:
+                    os.chmod(file, 384) # only your user can read and write this file
+                except OSError:
+                    pass
                 return file
             else:
                 if ".json" not in file: file += ".json"
                 self.sync_entries()
                 with open(file, "w") as f:
                     f.write(json.dumps(self.urls))
+                try:
+                    os.chmod(file, 384) # only your user can read and write this file
+                except OSError:
+                    pass
                 return file
