@@ -1,6 +1,6 @@
 # keepassc and python-keepass
 
-This provides command line and Python interfaces for operating on
+This provides command line and Python (both 2 and 3) interfaces for operating on
 files in KeePass format v3 (used by [KeePass](http://keepass.info/)
 1.x, and [KeePassX](http://www.keepassx.org/)).  Note, this is not the
 format used by the KeePass application version 2.x.

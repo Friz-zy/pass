@@ -22,10 +22,13 @@ import sys, struct, os
 import random
 from copy import copy
 import datetime
+import six
+from Crypto.Cipher import AES
+import hashlib
 
-from header import DBHDR
-from infoblock import GroupInfo, EntryInfo
-import hier
+from keepass.header import DBHDR
+from keepass.infoblock import GroupInfo, EntryInfo
+from keepass import hier
 
 class Database(object):
     '''
@@ -47,10 +50,10 @@ class Database(object):
 
     def read(self,filename):
         'Read in given .kdb file'
-        fp = open(filename)
+        fp = open(filename, "rb")
         buf = fp.read()
         fp.close()
-
+        
         headbuf = buf[:124]
         self.header = DBHDR(headbuf)
         self.groups = []
@@ -88,9 +91,8 @@ class Database(object):
         '''Munge masterkey into the final key for decryping payload by
         encrypting it for the given number of rounds masterseed2 and
         hashing it with masterseed.'''
-        from Crypto.Cipher import AES
-        import hashlib
-
+        if six.PY3:
+            masterkey = masterkey.encode()
         key = hashlib.sha256(masterkey).digest()
         cipher = AES.new(masterseed2,  AES.MODE_ECB)
         
@@ -105,46 +107,45 @@ class Database(object):
         'Decrypt payload (non-header) part of the buffer'
 
         if enctype != 'Rijndael':
-            raise ValueError, 'Unsupported decryption type: "%s"'%enctype
+            raise ValueError('Unsupported decryption type: "%s"'%enctype)
 
         payload = self.decrypt_payload_aes_cbc(payload, finalkey, iv)
         crypto_size = len(payload)
 
         if ((crypto_size > 2147483446) or (not crypto_size and self.header.ngroups)):
-            raise ValueError, "Decryption failed.\nThe key is wrong or the file is damaged"
+            raise ValueError("Decryption failed.\nThe key is wrong or the file is damaged")
 
-        import hashlib
         if self.header.contents_hash != hashlib.sha256(payload).digest():
-            raise ValueError, "Decryption failed. The file checksum did not match."
+            raise ValueError("Decryption failed. The file checksum did not match.")
 
         return payload
 
     def decrypt_payload_aes_cbc(self, payload, finalkey, iv):
         'Decrypt payload buffer with AES CBC'
-
-        from Crypto.Cipher import AES
         cipher = AES.new(finalkey, AES.MODE_CBC, iv)
         payload = cipher.decrypt(payload)
-        extra = ord(payload[-1])
+        if six.PY3:
+            extra = payload[-1]
+        else:
+            extra = ord(payload[-1])
         payload = payload[:len(payload)-extra]
         return payload
 
     def encrypt_payload(self, payload, finalkey, enctype, iv):
         'Encrypt payload'
         if enctype != 'Rijndael':
-            raise ValueError, 'Unsupported encryption type: "%s"'%enctype
+            raise ValueError('Unsupported encryption type: "%s"'%enctype)
         return self.encrypt_payload_aes_cbc(payload, finalkey, iv)
 
     def encrypt_payload_aes_cbc(self, payload, finalkey, iv):
         'Encrypt payload buffer with AES CBC'
-        from Crypto.Cipher import AES
         cipher = AES.new(finalkey, AES.MODE_CBC, iv)
         # pad out and store amount as last value
         length = len(payload)
-        encsize = (length/AES.block_size+1)*16
-        padding = encsize - length
+        encsize = (length//AES.block_size+1)*16
+        padding = int(encsize - length)
         for ind in range(padding):
-            payload += chr(padding)
+            payload += chr(padding).encode('ascii')
         return cipher.encrypt(payload)
         
     def __str__(self):
@@ -155,7 +156,7 @@ class Database(object):
 
     def encode_payload(self):
         'Return encoded, plaintext groups+entries buffer'
-        payload = ""
+        payload = b""
         for group in self.groups:
             payload += group.encode()
         for entry in self.entries:
@@ -163,7 +164,6 @@ class Database(object):
         return payload
 
     def generate_contents_hash(self):
-        import hashlib
         self.header.contents_hash = hashlib.sha256(self.encode_payload()).digest()
 
     def write(self,filename,masterkey=""):
@@ -173,12 +173,12 @@ class Database(object):
         Resets IVs and master seeds.
         '''
         self.generate_contents_hash()
-
+        
         header = copy(self.header)
         header.ngroups = len(self.groups)
         header.nentries = len(self.entries)
         header.reset_random_fields()
-
+        
         finalkey = self.final_key(masterkey = masterkey or self.masterkey,
                                   masterseed = header.master_seed,
                                   masterseed2 = header.master_seed2,
@@ -188,7 +188,7 @@ class Database(object):
                                        header.encryption_type(),
                                        header.encryption_iv)
 
-        fp = open(filename,'w')
+        fp = open(filename,'wb')
         fp.write(header.encode())
         fp.write(payload)
         fp.close()
@@ -216,20 +216,19 @@ class Database(object):
                 if 'group' not in nick: nick = 'group_'+nick
                 dat[nick] = group.__dict__[what]
 
-            print format%dat
+            six.print_((format%dat))
             continue
         return
 
     def hierarchy(self):
         '''Return database with groups and entries organized into a
         hierarchy'''
-        from hier import Node
 
-        top = Node()
+        top = hier.Node()
         breadcrumb = [top]
         node_by_id = {None:top}
         for group in self.groups:
-            n = Node(group)
+            n = hier.Node(group)
             node_by_id[group.groupid] = n
 
             while group.level - breadcrumb[-1].level() != 1:
@@ -251,7 +250,6 @@ class Database(object):
         Update the database using the given hierarchy.  
         This replaces the existing groups and entries.
         '''
-        import hier
         collector = hier.CollectVisitor()
         hier.visit(hierarchy, collector)
         self.groups = collector.groups
