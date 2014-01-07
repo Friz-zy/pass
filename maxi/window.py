@@ -17,7 +17,6 @@ import random
 from keeper import Keeper
 from listFiles import getFiles
 from generator import Generator
-from configobj import ConfigObj
 from main_pass_ui import Ui_Pass
 from config import Config
 from dialogs import Password
@@ -350,7 +349,7 @@ class Pass(QtGui.QMainWindow):
         if self.savePageBeforeClose() != -1:
             self.saveDatabase()
         self.saveConfig()
-        print "bye!"
+        six.print_(("bye!"), file=sys.stdout, end="\n", sep=" ")
         self.close()
 
 def main():
