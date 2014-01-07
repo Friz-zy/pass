@@ -1,8 +1,13 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # coding=utf-8 
 
+import six
 from time import clock
-from itertools import cycle, izip
+if six.PY3:
+    from itertools import cycle
+    izip = zip
+else:
+    from itertools import cycle, izip
 import sys
 import random
 import time
@@ -38,7 +43,7 @@ class Generator():
 			with open(file, "w") as f:
 				f.writelines(salt)
 			os.chmod(file, 256) # only your user can read this file
-		except IOError, OSError:
+		except (IOError, OSError):
 			# it is works in all OS, but clock() is most efficient in Windows
 			with open(file, "a") as f:
 				f.writeline("#" + hashlib.sha512(clock()).hexdigest())
