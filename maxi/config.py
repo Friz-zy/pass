@@ -31,7 +31,7 @@ import os
 import sys
 import shutil
 import six
-from configobj import ConfigObj
+# configobj is not working with python3 =\
 
 class Config:
     def __init__(self, parent, name, defaultConfigPathPath=""):
@@ -90,55 +90,57 @@ class Config:
                                             file=sys.stderr, end="\n", sep=" ")
 
     def loadConfig(self):
+        def readConfig(self, lines):
+            for l in lines:
+                if l[0] in "#;":
+                    continue
+                if "[" == l.strip()[0] and "]" == l.strip()[-1]:
+                    continue
+                argument = l.split("=", 1)
+                if argument:
+                    for f in argument:
+                        f = f.strip()
+                    if len(argument) == 1:
+                        argument[1] = "True"
+                    self.setArgument(argument[0], argument[1])
+
         try:
-            config = ConfigObj(self.defaultConfigPath)
+            with open(self.defaultConfigPath, "r") as l:
+                lines = l.readlines()
+            readConfig(lines)
         except:
             six.print_(("Error: can't load %s as default config" % self.defaultConfigPath),
                                                         file=sys.stderr, end="\n", sep=" ")
-            config = {}
         try:
-            userConfig = ConfigObj(self.homeConfigPath)
+            with open(self.homeConfigPath, "r") as l:
+                lines = l.readlines()
+            readConfig(lines)
         except:
             six.print_(("Error: can't load %s as user config" % self.homeConfigPath),
                                                     file=sys.stderr, end="\n", sep=" ")
-            userConfig = {}
-        
-        self.config = dict(config.items() + userConfig.items())
-        self.setFieldsFromDict(self.config)
 
-    def setFieldsFromDict(self, d):
-        for key in d.keys():
-            if isinstance(d[key], dict):
-                self.setFieldsFromDict(d[key])
-            else:
-                self.setField(key)
-
-    def setField(self, field, default=None):
-        if not field:
-            six.print_(("can not set empty field to self"),
+    def setArgument(self, argument, value):
+        if not value or not argument:
+            six.print_(("can not set empty argument to self"),
                             file=sys.stderr, end="\n", sep=" ")
             return 1
-        elif self.config[field]:
-            self.parent.__dict__[field] = self.config.get(field, default)
+        self.parent.__dict__[argument] = value
 
-    def saveConfig(self, fields):
-        try:
-            userConfig = ConfigObj(self.homeConfigPath)
-        except:
-            six.print_(("Error: can't load %s as user config" % self.homeConfigPath),
-                                                    file=sys.stderr, end="\n", sep=" ")
-            userConfig = ConfigObj()
-            for field in fields:
-                userConfig[field] = self.parent.__dict__[field]
+    def saveConfig(self, arguments):
+        with open(self.homeConfigPath, "r") as file:
+            lines = file.readlines() 
 
-        for field in fields:
-            self.setFieldToDict(field, userConfig)
+        for l in lines:
+            if l[0] in "#;":
+                continue
+            if "[" == l.strip()[0] and "]" == l.strip()[-1]:
+                continue
+            argument = l.split("=", 1)[0].strip()
+            if argument in arguments:
+                l = "%s = %s\n" % (argument, self.parent.__dict__[argument])
+                arguments -= argument
+            for argument in arguments:
+                lines += "%s = %s\n" % (argument, self.parent.__dict__[argument])
+
         with open(self.homeConfigPath, "w") as file:
-            userConfig.write(file)
-
-    def setFieldToDict(self, field, d):
-            for key in d.keys():
-                if isinstance(d[key], dict):
-                    self.setFieldToDict(field, d[key])
-                elif  key == field:
-                     d[key] = self.parent.__dict__[field]
+            file.write(lines)
