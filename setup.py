@@ -30,7 +30,7 @@ setup(
     license = module.__license__,
     keywords = module.__keywords__,
     url = module.__url__,   # project home page, if any
-    install_requires = ['PySide', 'pycrypto', 'configobj','six'],
+    install_requires = ['PySide', 'pycrypto', 'six'],
     package_data = {
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.txt', '*.rst', '*.md'],
