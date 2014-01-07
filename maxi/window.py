@@ -1,8 +1,18 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # coding=utf-8
+"""
+Copyright (c) by Filipp Kucheryavy aka Frizzy <filipp.s.frizzy@gmail.com>
+All rights reserved.
+Code under LGPL v3:
+You may copy, distribute and modify the software provided that modifications are open source.
+However, software that includes the license may release under a different license.
+http://www.tldrlegal.com/l/LGPL3
+"""
+
 
 import os
 import sys
+import six
 import random
 from keeper import Keeper
 from listFiles import getFiles
@@ -11,13 +21,14 @@ from configobj import ConfigObj
 from main_pass_ui import Ui_Pass
 from config import Config
 from dialogs import Password
+
 try:
   from PySide import QtCore, QtGui
 except:
     try:
         from PyQt4 import QtCore, QtGui
     except:
-        print >> sys.stderr, "Error: can't load PySide or PyQT"
+        six.print_(("Error: can't load PySide or PyQT"), file=sys.stderr, end="\n", sep=" ")
         sys.exit()
 
 class Pass(QtGui.QMainWindow):
