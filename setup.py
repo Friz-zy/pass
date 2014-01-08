@@ -14,10 +14,6 @@ setup(
     url = module.__url__,   # project home page, if any
     install_requires = ['PySide', 'pycrypto', 'six', 'keepass'],
     packages=['Pass'],
-    package_data = {
-        '.': ['*.txt', '*.rst', '*.md'],
-        "Pass" : ['images/*', 'icons/*', 'keepass/*', '*.*'],
-    },
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     include_package_data=True,
     classifiers=[
