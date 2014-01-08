@@ -138,7 +138,7 @@ class Pass(QtGui.QMainWindow):
         self.config.createUserConfig(["icons", "images", "pass.py"])
         self.config.loadConfig() # self.file, self.salt, self.icons, self.images
 
-        if self.file:
+        if self.file and type(self.file) != 'bool':
             self.setDatabase(self.file)
         else:
             self.setPassword()
@@ -212,7 +212,7 @@ class Pass(QtGui.QMainWindow):
 
     def saveDatabase(self):
         if  self.file:
-            self.keeper.save(self.file, self.password)
+            self.file = self.keeper.save(self.file, self.password)
         else:
             self.saveAsDatabase()
 
@@ -347,10 +347,11 @@ class Pass(QtGui.QMainWindow):
 
     def closeEvent(self, e):
         if self.savePageBeforeClose() != -1:
-            self.saveDatabase()
-        self.saveConfig()
-        six.print_(("bye!"), file=sys.stdout, end="\n", sep=" ")
-        self.close()
+            self.saveConfig()
+            six.print_(("bye!"), file=sys.stdout, end="\n", sep=" ")
+            self.close()
+        else:
+            e.ignore()
 
 def main():
     app = QtGui.QApplication(sys.argv)

@@ -91,4 +91,6 @@ class Generator():
 
 	def xor(self, ss, key):
 		key = cycle(key)
+		if six.PY3:
+			return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key)).encode()
 		return ''.join(chr(ord(x) ^ ord(y)) for (x,y) in izip(ss, key))
