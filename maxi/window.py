@@ -138,7 +138,7 @@ class Pass(QtGui.QMainWindow):
         self.config.createUserConfig(["icons", "images", "pass.py"])
         self.config.loadConfig() # self.file, self.salt, self.icons, self.images
 
-        if self.file:
+        if self.file and type(self.file) != 'bool':
             self.setDatabase(self.file)
         else:
             self.setPassword()
