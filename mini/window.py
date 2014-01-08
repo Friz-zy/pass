@@ -2,9 +2,22 @@
 # coding=utf-8
 # http://habrahabr.ru/post/31426/
 from pass_ui import Ui_Pass
-from PyQt4 import QtCore, QtGui
+import six
 import sys, hashlib
-from itertools import cycle, izip
+if six.PY3:
+    from itertools import cycle
+    izip = zip
+else:
+    from itertools import cycle, izip
+
+try:
+  from PySide import QtCore, QtGui
+except:
+    try:
+        from PyQt4 import QtCore, QtGui
+    except:
+        six.print_(("Error: can't load PySide or PyQT"), file=sys.stderr, end="\n", sep=" ")
+        sys.exit()
 
 class Pass(QtGui.QWidget):
 	def __init__(self, parent=None):
@@ -28,7 +41,7 @@ class Pass(QtGui.QWidget):
 				with open('pass.py', "w") as f:
 					f.writelines(salt)
 				os.popen("chmod 400 ./pass.py") # only your user can read this file
-			except IOError, OSError:
+			except (IOError, OSError):
 				# it is works in all OS, but clock() is most efficient in Windows
 				from time import clock
 				with open('pass.py', "a") as f:

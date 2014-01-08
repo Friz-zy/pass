@@ -7,7 +7,18 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+import sys
+import six
+
+try:
+  from PySide import QtCore, QtGui
+except:
+    try:
+        from PyQt4 import QtCore, QtGui
+    except:
+        six.print_(("Error: can't load PySide or PyQT"), file=sys.stderr, end="\n", sep=" ")
+        sys.exit()
+
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
