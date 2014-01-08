@@ -98,10 +98,10 @@ class Config:
                     continue
                 argument = l.split("=", 1)
                 if argument:
-                    for f in argument:
-                        f = f.strip()
+                    for n, f in enumerate(argument):
+                        argument[n] = f.strip()
                     if len(argument) == 1:
-                        argument[1] = "True"
+                        argument[1] = True
                     self.setArgument(argument[0], argument[1])
 
         try:
