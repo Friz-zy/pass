@@ -128,15 +128,16 @@ class Config:
 
     def saveConfig(self, arguments):
         with open(self.homeConfigPath, "r") as file:
-            lines = file.readlines() 
-        for l in lines:
+            lines = file.readlines()
+
+        for n, l in enumerate(lines):
             if l[0] in "#;":
                 continue
             if "[" == l.strip()[0] and "]" == l.strip()[-1]:
                 continue
             argument = l.split("=", 1)[0].strip()
             if argument in arguments:
-                l = "%s = %s\n" % (argument, self.parent.__dict__[argument])
+                lines[n] = "%s = %s\n" % (argument, self.parent.__dict__[argument])
                 arguments.remove(argument)
         for argument in arguments:
             lines += "%s = %s\n" % (argument, self.parent.__dict__[argument])
