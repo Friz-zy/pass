@@ -91,6 +91,7 @@ class Keeper():
                 os.chmod(file, mask)
             except OSError: pass
         if file:
+            mask = 384 # only rw for owner
             if self.isKdb:
                 if ".kdb" not in file: file += ".kdb"
                 self.sync_entries()

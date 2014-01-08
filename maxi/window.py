@@ -212,7 +212,7 @@ class Pass(QtGui.QMainWindow):
 
     def saveDatabase(self):
         if  self.file:
-            self.keeper.save(self.file, self.password)
+            self.file = self.keeper.save(self.file, self.password)
         else:
             self.saveAsDatabase()
 
@@ -347,10 +347,11 @@ class Pass(QtGui.QMainWindow):
 
     def closeEvent(self, e):
         if self.savePageBeforeClose() != -1:
-            self.saveDatabase()
-        self.saveConfig()
-        six.print_(("bye!"), file=sys.stdout, end="\n", sep=" ")
-        self.close()
+            self.saveConfig()
+            six.print_(("bye!"), file=sys.stdout, end="\n", sep=" ")
+            self.close()
+        else:
+            e.ignore()
 
 def main():
     app = QtGui.QApplication(sys.argv)
