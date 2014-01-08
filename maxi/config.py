@@ -107,14 +107,14 @@ class Config:
         try:
             with open(self.defaultConfigPath, "r") as l:
                 lines = l.readlines()
-            readConfig(lines)
+            readConfig(self, lines)
         except:
             six.print_(("Error: can't load %s as default config" % self.defaultConfigPath),
                                                         file=sys.stderr, end="\n", sep=" ")
         try:
             with open(self.homeConfigPath, "r") as l:
                 lines = l.readlines()
-            readConfig(lines)
+            readConfig(self, lines)
         except:
             six.print_(("Error: can't load %s as user config" % self.homeConfigPath),
                                                     file=sys.stderr, end="\n", sep=" ")
@@ -129,7 +129,6 @@ class Config:
     def saveConfig(self, arguments):
         with open(self.homeConfigPath, "r") as file:
             lines = file.readlines() 
-
         for l in lines:
             if l[0] in "#;":
                 continue
@@ -138,9 +137,9 @@ class Config:
             argument = l.split("=", 1)[0].strip()
             if argument in arguments:
                 l = "%s = %s\n" % (argument, self.parent.__dict__[argument])
-                arguments -= argument
-            for argument in arguments:
-                lines += "%s = %s\n" % (argument, self.parent.__dict__[argument])
+                arguments.remove(argument)
+        for argument in arguments:
+            lines += "%s = %s\n" % (argument, self.parent.__dict__[argument])
 
         with open(self.homeConfigPath, "w") as file:
-            file.write(lines)
+            file.writelines(lines)
