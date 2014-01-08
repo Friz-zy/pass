@@ -1,6 +1,6 @@
 global-include *.md *.txt *.rst
-recursive-include Pass/icons *
-recursive-include Pass/images *
-graft Pass
+recursive-include ps/icons *
+recursive-include ps/images *
+graft ps
 global-exclude *.pyc
 

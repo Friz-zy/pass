@@ -13,7 +13,7 @@ At first start python will record unique salt in pass.py and run generating pass
 
 ##How to install:##
 If you know about python [easy_install](http://www.google.com/search?q=python+egg+install) and [pip](http://pypi.python.org/pypi/pip) - use it! Else expect packages or read about pip.
-Notice: if you want to create an egg yourself, first rename mini or maxi to Pass.
+Notice: if you want to create an egg yourself, first rename mini or maxi to ps.
 
 
 Src on [Github](https://github.com/Friz-zy/passGui)
