@@ -12,7 +12,7 @@ setup(
     license = module.__license__,
     keywords = module.__keywords__,
     url = module.__url__,   # project home page, if any
-    install_requires = ['PySide', 'pycrypto', 'six'],
+    install_requires = ['PySide', 'pycrypto', 'six', 'keepass'],
     packages=['Pass'],
     package_data = {
         '.': ['*.txt', '*.rst', '*.md'],
