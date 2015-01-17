@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""
-Copyright (c) by Filipp Kucheryavy aka Frizzy <filipp.s.frizzy@gmail.com>
-All rights reserved.
-Code under LGPL v3:
-You may copy, distribute and modify the software provided that modifications are open source.
-However, software that includes the license may release under a different license.
-http://www.tldrlegal.com/l/LGPL3
-"""
 
 
 import os
