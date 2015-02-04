@@ -16,7 +16,7 @@ setup(
     long_description=open(join(dirname(__file__), 'README.md')).read(),
     include_package_data=True,
     classifiers=[
-        'License :: OSI Approved :: MIT',
+        'License :: OSI Approved :: GPLv2',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',

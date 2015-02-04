@@ -1,7 +1,7 @@
 __author__ = "Filipp Frizzy"
 __copyright__ = ""
 __credits__ = ["Filipp Frizzy"]
-__license__ = "MIT"
+__license__ = "GPLv2"
 __version__ = "2.0"
 __maintainer__ = "Filipp Frizzy"
 __email__ = "filipp.s.frizzy@gmail.com"
